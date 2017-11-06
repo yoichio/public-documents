@@ -31,11 +31,12 @@ Let's see following Bidi text:
   
 User might want to select text in reading order neither DOM order nor visibly.
 
-![bidi_reading](https://github.com/yoichio/public-documents/blob/master/resources/bidi_reading.png)
+![bidi_reading](https://github.com/yoichio/public-documents/blob/master/resources/bidi_reading.png)<br/>
 
 This is the result when I drag from left to right in the middle of ‘Egypt’.
 
-![bidi_select](https://github.com/yoichio/public-documents/blob/master/resources/bidi_select.png)
+![bidi_select](https://github.com/yoichio/public-documents/blob/master/resources/bidi_select.png)  <br/><br/>
+
 User can select in reading order on Chrome no in DOM order.
 
 Chrome needs multiple ranges representation internally for highliting/copy/paste such selected content.
