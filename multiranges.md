@@ -24,24 +24,6 @@ In that case, user drag from first grid to second one to select those elements b
 “content2” of third grid is also selected.
 ![grid](https://github.com/yoichio/public-documents/blob/master/resources/grid.png)
 
-### BiDi
-Let's see following Bidi text:
-```
-<p dir="ltr">bahrain مصر kuwait</p>
-```
-(“مصر “ means Egypt pronoused ‘misr’ from right to left.) <br/>
- rsim
-  
-User might want to select text in reading order neither DOM order nor visibly.
-
-![bidi_reading](https://github.com/yoichio/public-documents/blob/master/resources/bidi_reading.png)<br/>
-
-This is the result when I drag from left to right in the middle of ‘Egypt’.
-
-![bidi_select](https://github.com/yoichio/public-documents/blob/master/resources/bidi_select.png)  
-
-User can select in reading order "bahrain m" on Chrome in this case but that is not DOM order.
-
 Chrome needs multiple ranges representation internally for highliting/copy/paste such selected content.
 If web author needs the range too(for example, news paper/ebook web app that can bookmark user selection like kindle.), we should expose the ranges.
 
