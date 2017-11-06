@@ -8,9 +8,13 @@ Chrome wants to offer such selection with less functionality than what chrome of
 so that Chrome serves selection capability for user and/or web author with stability.
 
 ## Cases we need multiple ranges
-### Table
+### Ctrl-click
+![img](resources/ctrl-click.png)  
+#### Table
+![table](resources/table.png)  
+
 ### Grid Layout
-Following code demostrate grid layout layouting reorder.
+Following code demostrate grid layout reorder.
 ```html
 <style>
 .root { display: grid;}
@@ -26,8 +30,19 @@ In that case, user drag from first grid to second one to select those elements b
 “content2” of third grid is also selected.
 ![grid](https://github.com/yoichio/public-documents/blob/master/resources/grid.png)
 
-### Ctrl-click
 ### Shadow DOM
+Following code demostrate Shadow DOM layout nodes reorder.
+```html
+<div id=host>
+ <span slot=s1>foo1</span>
+ <span slot=s2>bar2</span>
+ </div>
+<script>
+ host.attachShadow({mode:"open"}).innerHTML =
+  "<slot name=s2></slot><slot name=s1></slot>";
+</script>
+```
+![img](resources/shadow.png)  
 
 ## Proposition
 We offer
