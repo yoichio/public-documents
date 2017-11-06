@@ -69,18 +69,24 @@ Default ```modes``` are empty array and this settings enable multiple ranges.
 - ```multiple-addrange``` enables webauthor to create multiple ranges with ```addRange``` method.
 
 ### No overwrapping
-Any modes don't create/allow overwrapping Range.
+Any modes don't create/allow overwrapping Ranges.
 
-### Limited editing operation for user
+### Editing functionality for user
 We offer user only 
 - copy  
 So that user can get contents they are selecting.  
 
-- delete
-- cut(copy + delete)  
+- delete, cut(copy + delete)  
+If ```modes``` include ```multiple-user-ctrl```, that is also useful.
 
+I'm considering the operation inserting text onto multiple ranges simultaniously.
+Web author can implement it with
+[Input Events](https://www.w3.org/TR/input-events-2/) if we pass multiple ranges
+through ```getTargetRanges()```. Ditto to delete and cut.
 
-### Limited editing operation for web author
+### Editing API for web author
+#### rangeCount
+
 getRanges(), execCommand copy, delete
 
 
