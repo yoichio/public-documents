@@ -51,6 +51,7 @@ mutate syncronousely if depending DOM tree is changed[[1](https://github.com/w3c
 Chrome plans to represent multiple ranges w/o DOM Range internally and expose the ranges as not DOM Range.
 
 ## Proposition
+### #1 StaticRanges.
 I propose:
 ```webidl
 // Web IDL
@@ -62,14 +63,14 @@ This is very simple API and enough to capture user selection for none DOM changi
 ```javascript
 // javascript
 for (let range of getSelection().getRanges()) {
-  /// something "static" opration like
+  // Do "static" opration like
   myDb.bookmarkUserSelection(range);
 }
 ```
 
-### Pros
+#### Pros
 - Simple.
-### Cons
+#### Cons
 - No live Range.
 - Even If web author calls addRange(range), getRanges() returns different StaticRanges. 
 
@@ -85,12 +86,14 @@ for (let range of getSelection().getRanges()) {
   ranges.push(domrange);
 }
 for (let domrange of ranges) {
-  /// something "dynamic" opration like
+  // Do "dynamic" opration like
   unbold(domrange);
 }
 ```
 However, this might not work because Range mutation doesn’t already work as web aurhor expects[[2](
-https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)] though it is well specified.      
+https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)] though it is well specified.  
+
+### #2 Live StaticRanges on Promise.
 I’m thinking another API using Promise chain:
 ```webidl
 // Web IDL
@@ -106,7 +109,7 @@ With that, the following code illustrates editing with live StaticRanges:
 ```javascript
 // javascript
 async editAsync() {
-  var iterator= await window.getSelection().getNextRangeIterator();
+  var iterator = await window.getSelection().getNextRangeIterator();
   if (!iterator.HasRange) {
     console.log(“no selection”).
     return;
@@ -114,7 +117,9 @@ async editAsync() {
   do {
   const range = iterator.range;
   console.log(range.startContainer);
-  // some DOM mutation code
+  // Do "dynamic" opration like
+  unbold(domrange);
+  // Get next range iterator by passing current iterator.
   iterator = await window.getSelection().getNextRangeIterator(iterator);
   } while (iterator.HasRange);
 }
@@ -123,12 +128,12 @@ Point is that web author only can get StaticRange, which is always live, one by 
 If some mutation changes remaining ranges, getNextRange return such
 updated range. Number of iteration also can change in the middle of the loop.
 
-### Pros
+#### Pros
 - Web author accesses fresh ranges w/o Range.
   - No Range intances increases
   - U.A. can implement another range mutation as web author expect.
 
-### Cons
+#### Cons
 - Complex.
 - What If user change selection while editing?
 - Even If web author calls addRange(range), getNextRangeIterator returns different
