@@ -9,6 +9,7 @@ so that Chrome serves selection capability for user and/or web author with stabi
 
 ## Cases we need multiple ranges
 ### Ctrl-click
+On Firefox, user can select discontigous DOM Range with ctrl-click/drag.
 ![img](resources/ctrl-click.png)  
 #### Table
 ![table](resources/table.png)  
@@ -43,7 +44,9 @@ out
   "<slot name=s2></slot><slot name=s1></slot>";
 </script>
 ```
+If user select from 'out' to 'bar2', chrome select them excluding 'foo1'.  
 ![img](resources/shadow2.png)  
+However, ```getSelection().getRangeAt(0)``` returns {'out',1, 'bar2', 2}.
 
 ## Problems
 - Back compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
