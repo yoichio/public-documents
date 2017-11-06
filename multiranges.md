@@ -1,14 +1,21 @@
-# Multi ranges explained
+# Minimal multi ranges explained
 
 Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range), which represents a range
- on a document.  
-However, if user want to select contents intuitively by mouse/touch/keyboard on following cases, 
-Chrome needs to represent the selection with not one Range.  
-we need new APIs on [Selection API](https://www.w3.org/TR/selection-api/) to expose such selection for web author.
+ on a document.  
+However, there are cases where user want to select contents which can not
+be represented with one Range.  
+Chrome wants to offer such selection for user and/or web author balancing between capability and stability.  
+It is opt-in, StaticRange and few execCommands.
 
-## Scenarios
+## Cases we need multiple ranges
+### Ctrl-click
+On Firefox, user can select discontigous DOM Range with ctrl-click/drag.
+![img](resources/ctrl-click.png)  
+#### Table
+![table](resources/table.png)  
+
 ### Grid Layout
-Following code demostrate grid layout layouting reorder.
+Following code demostrate grid layout reorder.
 ```html
 <style>
 .root { display: grid;}
@@ -24,46 +31,84 @@ In that case, user drag from first grid to second one to select those elements b
 “content2” of third grid is also selected.
 ![grid](https://github.com/yoichio/public-documents/blob/master/resources/grid.png)
 
-Chrome needs multiple ranges representation internally for highliting/copy/paste such selected content.
-If web author needs the range too(for example, news paper/ebook web app that can bookmark user selection like kindle.), we should expose the ranges.
+### Shadow DOM
+Following code demostrate Shadow DOM layout nodes reorder.
+```html
+out
+<span id=host>
+ <span slot=s1>foo1</span>
+ <span slot=s2>bar2</span>
+</span>
+<script>
+ host.attachShadow({mode:"open"}).innerHTML =
+  "<slot name=s2></slot><slot name=s1></slot>";
+</script>
+```
+If user select from 'out' to 'bar2', chrome select them excluding 'foo1'.  
+![img](resources/shadow2.png)  
+However, ```getSelection().getRangeAt(0)``` returns {'out',1, 'bar2', 2}.
 
-However, as we discussed, we don’t want to increase Range instances for performance because Range should
-mutate syncronousely if depending DOM tree is changed[[1](https://github.com/w3c/input-events/issues/38#issuecomment-252309333)], and Range mutation sometimes doesn’t work for web authors expectation[[2](https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)].
-
-Chrome plans to represent multiple ranges w/o DOM Range internally and expose the ranges as not DOM Range.
+## Problems to implement full multiple Ranges 
+If we simply implement multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
+there are many issues:
+- Backward compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
+- Performance: Range should mutate syncronousely for DOM mutation(
+[spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
+It means if there are more Ranges, DOM mutation performance gets worse.
+- Complexity: Overwrapped ranges, ```insertOrderedList``` or other DOM mutation commands.
 
 ## Proposition
-### #1 StaticRanges.
-I propose:
-```webidl
-// Web IDL
-partial interface Selection {
-  sequence<StaticRange> getRanges();
-};
-```
-This is very simple API and enough to capture user selection for none DOM changing operation(bookmark, change style,,):
+### Opt-in selection mode
+We have few entry points for multiple Range.
 ```javascript
-// javascript
-for (let range of getSelection().getRanges()) {
+window.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
+```
+Default ```modes``` are empty array, in which U.A behaves as-is.  
+Setting ```modes``` enables multiple ranges:
+- ```multiple-user-ctrl``` enables user to create multiple ranges with ctrl-click/drag.
+- ```multiple-user-layout``` enables user to create multiple ranges with drag/shift-arrowkey on layout order.
+- ```multiple-addstaticrange``` enables webauthor to create multiple ranges with ```addStaticRange``` method.
+
+### No overwrapping
+Any mode doesn't create/allow overwrapping Ranges.
+
+### Editing functionality for user
+We offer user only 
+- copy  
+So that user can get contents they are selecting.  
+
+- delete, cut(copy + delete)  
+If ```modes``` include ```multiple-user-ctrl```, that is also useful.
+
+I'm considering the operation inserting text onto multiple ranges simultaniously.
+Web author can implement it with
+[Input Events](https://www.w3.org/TR/input-events-2/) if we pass multiple ranges
+through ```getTargetRanges()```. Ditto to delete and cut.
+
+### Editing API for web author
+#### Invalidating existing Range API.
+```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception.
+That's because I want web author to avoid performance footgun of Range.
+
+### StaticRange API.
+```javascript
+document.getSelection().addStaticRange(nodeA, 0, nodeB, 3);
+```
+That's all, but it throws exception if added StaticRange overwrapps existing ```getStaticRanges()```.  
+You get all ranges with ```getStaticRanges()```:
+```javascript
+for (let range of getSelection().getStaticRanges()) {
   // Do "static" opration like
   myDb.bookmarkUserSelection(range);
 }
 ```
 
-#### Pros
-- Simple.
-#### Cons
-- No live Range.
-- Even If web author calls ```addRange(range)```, ```getRanges()``` might return different
-number/range of StaticRanges because U.A highlight selection splitting the passed ```range```
-as the scenarios show. 
-
 If web author want to edit content and have live Ranges, they might
 create Range from the StaticRange.
 ```javascript
-// javascript
 let ranges = [];
-for (let range of getSelection().getRanges()) {
+// Collect all ranges before editing.
+for (let range of getSelection().getStaticRanges()) {
   let domrange = document.createRange();
   domrange.setStart(range.startContainer, range.startOffset);
   domrange.setEnd(range.endContainer, range.endOffset);
@@ -74,53 +119,6 @@ for (let domrange of ranges) {
   unbold(domrange);
 }
 ```
-However, this might not work because ```unbold(range)``` causes Range mutation in remainings of ```ranges```
-and it doesn’t already work as web author expects when editing area of each iteration
- is near other Ranges though the mutation is well specified[[2](
-https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)].  
 
-### #2 Live StaticRanges on Promise.
-I’m thinking another API using Promise chain:
-```webidl
-// Web IDL
-partial interface Selection {
-  Promise<RangeIterator> getNextRangeIterator(optional RangeIterator iterator);
-};
-interface RangeIterator {
-  readonly attribute boolean HasRange;
-  readonly attribute StaticRange;
-}
-```
-With that, the following code illustrates editing with live StaticRanges:
-```javascript
-// javascript
-async editAsync() {
-  // Call w/o an argument to get the first range iterator.
-  var iterator = await window.getSelection().getNextRangeIterator();
-  if (!iterator.HasRange) {
-    console.log(“no selection”).
-    return;
-  }	
-  do {
-    const domrange = iterator.range;
-    console.log(range.startContainer);
-    // Do "dynamic" opration like
-    unbold(domrange);
-    // Get next range iterator by passing current iterator.
-    iterator = await window.getSelection().getNextRangeIterator(iterator);
-  } while (iterator.HasRange);
-}
-```
-Point is that web author only can get StaticRange, which is always live, one by one through Promise.
-If some mutation changes remaining ranges, ```getNextRangeIterator``` return such
-updated range. Number of iteration also can change in the middle of the loop.
-
-#### Pros
-- Web author accesses fresh ranges w/o Range.
-  - No Range intances increases.
-  - U.A. can implement another range mutation as web author expect.
-
-#### Cons
-- Complex.
-- What If user change selection while editing?
-- Same for ```addRange(range)``` in #1.
+### Limited execCommand
+Only 'copy', 'undo', 'redo' are allowed.
