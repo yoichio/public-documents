@@ -1,11 +1,11 @@
-# Limited multi ranges explained
+# Minimal multi ranges explained
 
 Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range), which represents a range
  on a document.  
 However, there are cases where user want to select contents which can not
 be represented with one Range.  
-Chrome wants to offer such selection with less functionality than what chrome offers with one Range
-so that Chrome serves selection capability for user and/or web author with stability.
+Chrome wants to offer such selection for user and/or web author balancing between capability and stability.  
+It is opt-in, StaticRange and few execCommands.
 
 ## Cases we need multiple ranges
 ### Ctrl-click
@@ -48,7 +48,9 @@ If user select from 'out' to 'bar2', chrome select them excluding 'foo1'.
 ![img](resources/shadow2.png)  
 However, ```getSelection().getRangeAt(0)``` returns {'out',1, 'bar2', 2}.
 
-## Problems
+## Problems to implement full multiple Ranges 
+If we simply implement multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
+there are many issues:
 - Backward compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
 - Performance: Range should mutate syncronousely for DOM mutation(
 [spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
@@ -66,11 +68,19 @@ Default ```modes``` are empty array and this settings enable multiple ranges.
 - ```multiple-user-layout``` enables user to create multiple ranges with drag/shift-arrowkey on layout order.
 - ```multiple-addrange``` enables webauthor to create multiple ranges with ```addRange``` method.
 
+### No overwrapping
+Any modes don't create/allow overwrapping Range.
 
-We first offer 
-- for user
-Copy, Delete
-- for web author
+### Limited editing operation for user
+We offer user only 
+- copy  
+So that user can get contents they are selecting.  
+
+- delete
+- cut(copy + delete)  
+
+
+### Limited editing operation for web author
 getRanges(), execCommand copy, delete
 
 
