@@ -43,10 +43,14 @@ out
   "<slot name=s2></slot><slot name=s1></slot>";
 </script>
 ```
-![img](resources/shadow.png)  
+![img](resources/shadow2.png)  
 
 ## Problems
-
+- Back compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
+- Performance: Range should mutate syncronousely for DOM mutation(
+[spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
+It means if there are more Ranges, DOM mutation performance gets worse.
+- Complexity: Overwrapped ranges, ```insertOrderedList``` or other DOM mutation commands.
 
 ## Proposition
 We offer
