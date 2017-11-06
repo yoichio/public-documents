@@ -1,12 +1,14 @@
-# Multi ranges explained
+# Limited multi ranges explained
 
 Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range), which represents a range
  on a document.  
-However, if user want to select contents intuitively by mouse/touch/keyboard on following cases, 
-Chrome needs to represent the selection with not one Range.  
+However, there are cases where user want to select contents which can not
+be represented with one Range.
+Chrome wants to offer such selection with less functionality thant what chrome offers with one Range.
+
 we need new APIs on [Selection API](https://www.w3.org/TR/selection-api/) to expose such selection for web author.
 
-## Scenarios
+## Cases
 ### Grid Layout
 Following code demostrate grid layout layouting reorder.
 ```html
@@ -23,6 +25,16 @@ Following code demostrate grid layout layouting reorder.
 In that case, user drag from first grid to second one to select those elements but
 “content2” of third grid is also selected.
 ![grid](https://github.com/yoichio/public-documents/blob/master/resources/grid.png)
+### Table
+### Ctrl-click
+### Shadow DOM
+
+## Proposition
+We offer
+- for user
+Copy, Delete
+- for web author
+getRanges(), execCommand copy, delete
 
 Chrome needs multiple ranges representation internally for highliting/copy/paste such selected content.
 If web author needs the range too(for example, news paper/ebook web app that can bookmark user selection like kindle.), we should expose the ranges.
@@ -32,7 +44,6 @@ mutate syncronousely if depending DOM tree is changed[[1](https://github.com/w3c
 
 Chrome plans to represent multiple ranges w/o DOM Range internally and expose the ranges as not DOM Range.
 
-## Proposition
 ### #1 StaticRanges.
 I propose:
 ```webidl
@@ -74,53 +85,3 @@ for (let domrange of ranges) {
   unbold(domrange);
 }
 ```
-However, this might not work because ```unbold(range)``` causes Range mutation in remainings of ```ranges```
-and it doesn’t already work as web author expects when editing area of each iteration
- is near other Ranges though the mutation is well specified[[2](
-https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)].  
-
-### #2 Live StaticRanges on Promise.
-I’m thinking another API using Promise chain:
-```webidl
-// Web IDL
-partial interface Selection {
-  Promise<RangeIterator> getNextRangeIterator(optional RangeIterator iterator);
-};
-interface RangeIterator {
-  readonly attribute boolean HasRange;
-  readonly attribute StaticRange;
-}
-```
-With that, the following code illustrates editing with live StaticRanges:
-```javascript
-// javascript
-async editAsync() {
-  // Call w/o an argument to get the first range iterator.
-  var iterator = await window.getSelection().getNextRangeIterator();
-  if (!iterator.HasRange) {
-    console.log(“no selection”).
-    return;
-  }	
-  do {
-    const domrange = iterator.range;
-    console.log(range.startContainer);
-    // Do "dynamic" opration like
-    unbold(domrange);
-    // Get next range iterator by passing current iterator.
-    iterator = await window.getSelection().getNextRangeIterator(iterator);
-  } while (iterator.HasRange);
-}
-```
-Point is that web author only can get StaticRange, which is always live, one by one through Promise.
-If some mutation changes remaining ranges, ```getNextRangeIterator``` return such
-updated range. Number of iteration also can change in the middle of the loop.
-
-#### Pros
-- Web author accesses fresh ranges w/o Range.
-  - No Range intances increases.
-  - U.A. can implement another range mutation as web author expect.
-
-#### Cons
-- Complex.
-- What If user change selection while editing?
-- Same for ```addRange(range)``` in #1.
