@@ -33,16 +33,20 @@ In that case, user drag from first grid to second one to select those elements b
 ### Shadow DOM
 Following code demostrate Shadow DOM layout nodes reorder.
 ```html
-<div id=host>
+out
+<span id=host>
  <span slot=s1>foo1</span>
  <span slot=s2>bar2</span>
- </div>
+</span>
 <script>
  host.attachShadow({mode:"open"}).innerHTML =
   "<slot name=s2></slot><slot name=s1></slot>";
 </script>
 ```
 ![img](resources/shadow.png)  
+
+## Problems
+
 
 ## Proposition
 We offer
