@@ -72,7 +72,9 @@ for (let range of getSelection().getRanges()) {
 - Simple.
 #### Cons
 - No live Range.
-- Even If web author calls addRange(range), getRanges() returns different StaticRanges. 
+- Even If web author calls addRange(range), getRanges() might return different
+number/range of StaticRanges because U.A highlight selection splitting the passed range as
+the scenarios show. 
 
 If web author want to edit content and have live Ranges, they might
 create Range from the StaticRange.
@@ -136,5 +138,4 @@ updated range. Number of iteration also can change in the middle of the loop.
 #### Cons
 - Complex.
 - What If user change selection while editing?
-- Even If web author calls addRange(range), getNextRangeIterator returns different
-ranges.
+- Same for addRange(range) in #1.
