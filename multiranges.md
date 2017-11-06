@@ -53,12 +53,14 @@ Chrome plans to represent multiple ranges w/o DOM Range internally and expose th
 ## Proposition
 I propose:
 ```webidl
+// Web IDL
 partial interface Selection {
-    sequence<StaticRange> getRanges();
+  sequence<StaticRange> getRanges();
 };
 ```
 This is very simple API and enough to capture user selection for none DOM changing operation(bookmark, change style,,):
 ```javascript
+// javascript
 for (let range of getSelection().getRanges()) {
   /// something "static" opration like
   myDb.bookmarkUserSelection(range);
@@ -74,6 +76,7 @@ for (let range of getSelection().getRanges()) {
 If web author want to edit content and have live Ranges, they might
 create Range from the StaticRange.
 ```javascript
+// javascript
 let ranges = [];
 for (let range of getSelection().getRanges()) {
   let domrange = document.createRange();
@@ -90,36 +93,40 @@ However, this might not work because Range mutation doesn’t already work as we
 https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)] though it is well specified.      
 I’m thinking another API using Promise chain:
 ```webidl
+// Web IDL
 partial interface Selection {
-    Promise<RangeIterator> getNextRangeIterator(optional RangeIterator iterator);
+  Promise<RangeIterator> getNextRangeIterator(optional RangeIterator iterator);
 };
 interface RangeIterator {
- readonly attribute boolean HasRange;
- readonly attribute StaticRange;
+  readonly attribute boolean HasRange;
+  readonly attribute StaticRange;
 }
 ```
 With that, the following code illustrates editing with live StaticRanges:
 ```javascript
+// javascript
 async editAsync() {
-	var iterator= await window.getSelection().getNextRangeIterator();
-	if (!iterator.HasRange) {
-		console.log(“no selection”).
-		return;
-	}	
-	do {
-	const range = iterator.range;
-	console.log(range.startContainer);
-// some DOM mutation code
-iterator = await window.getSelection().getNextRangeIterator(iterator);
-} while (iterator.HasRange);
+  var iterator= await window.getSelection().getNextRangeIterator();
+  if (!iterator.HasRange) {
+    console.log(“no selection”).
+    return;
+  }	
+  do {
+  const range = iterator.range;
+  console.log(range.startContainer);
+  // some DOM mutation code
+  iterator = await window.getSelection().getNextRangeIterator(iterator);
+  } while (iterator.HasRange);
 }
 ```
-Point is web aurhor only can get StaticRange one by one through Promise.
+Point is that web author only can get StaticRange, which is always live, one by one through Promise.
 If some mutation changes remaining ranges, getNextRange return such
 updated range. Number of iteration also can change in the middle of the loop.
 
 ### Pros
-- Web author accesses fresh ranges w/o Range. U.A. can implement another range mutation.
+- Web author accesses fresh ranges w/o Range.
+  - No Range intances increases
+  - U.A. can implement another range mutation as web author expect.
 
 ### Cons
 - Complex.
