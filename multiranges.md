@@ -59,7 +59,7 @@ It means if there are more Ranges, DOM mutation performance gets worse.
 
 ## Proposition
 ### Opt-in selection mode
-We have few entry points for multiple Range.
+We have a couple of entry points for multiple Range.
 ```javascript
 window.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
 ```
@@ -103,8 +103,8 @@ for (let range of getSelection().getStaticRanges()) {
 }
 ```
 
-If web author want to edit content and have live Ranges, they might
-create Range from the StaticRange.
+If web author wants to edit content and keep live Ranges, they might
+create Range from StaticRange.
 ```javascript
 let ranges = [];
 // Collect all ranges before editing.
@@ -121,4 +121,5 @@ for (let domrange of ranges) {
 ```
 
 ### Limited execCommand
-Only 'copy', 'undo', 'redo' are allowed.
+Only 'copy', 'undo', 'redo' are allowed because many execCommands are 'macro' operation
+ of DOM mutation on one Range.
