@@ -95,7 +95,7 @@ for (let domrange of ranges) {
 However, this might not work because ```unbold(range)``` causes Range mutation in remainings of ```ranges```
 and it doesn’t already work as web author expects[[2](
 https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)] when editing area of each iteration
- is near other Ranges though it is well specified.  
+ is near other Ranges though the mutation is well specified.  
 
 ### #2 Live StaticRanges on Promise.
 I’m thinking another API using Promise chain:
