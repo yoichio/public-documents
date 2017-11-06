@@ -1,14 +1,14 @@
 # Limited multi ranges explained
 
 Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range), which represents a range
- on a document.  
+ on a document.  
 However, there are cases where user want to select contents which can not
-be represented with one Range.
-Chrome wants to offer such selection with less functionality thant what chrome offers with one Range.
+be represented with one Range.  
+Chrome wants to offer such selection with less functionality than what chrome offers with one Range
+so that Chrome serves selection capability for user and/or web author with stability.
 
-we need new APIs on [Selection API](https://www.w3.org/TR/selection-api/) to expose such selection for web author.
-
-## Cases
+## Cases we need multiple ranges
+### Table
 ### Grid Layout
 Following code demostrate grid layout layouting reorder.
 ```html
@@ -25,7 +25,7 @@ Following code demostrate grid layout layouting reorder.
 In that case, user drag from first grid to second one to select those elements but
 “content2” of third grid is also selected.
 ![grid](https://github.com/yoichio/public-documents/blob/master/resources/grid.png)
-### Table
+
 ### Ctrl-click
 ### Shadow DOM
 
