@@ -61,12 +61,13 @@ It means if there are more Ranges, DOM mutation performance gets worse.
 ### Opt-in selection mode
 We have few entry points for multiple Range.
 ```javascript
-window.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addrange'];
+window.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
 ```
-Default ```modes``` are empty array and this settings enable multiple ranges.
+Default ```modes``` are empty array, in which U.A behaves as-is.  
+Setting ```modes``` enables multiple ranges:
 - ```multiple-user-ctrl``` enables user to create multiple ranges with ctrl-click/drag.
 - ```multiple-user-layout``` enables user to create multiple ranges with drag/shift-arrowkey on layout order.
-- ```multiple-addrange``` enables webauthor to create multiple ranges with ```addRange``` method.
+- ```multiple-addstaticrange``` enables webauthor to create multiple ranges with ```addStaticRange``` method.
 
 ### No overwrapping
 Any modes don't create/allow overwrapping Ranges.
@@ -85,20 +86,17 @@ Web author can implement it with
 through ```getTargetRanges()```. Ditto to delete and cut.
 
 ### Editing API for web author
-#### rangeCount
+Following behavior turns enable only if ```modes``` are not empty.
+#### Invalidating existing Range API.
+```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception.
+That's because I want web author to avoid performance footgun of Range.
 
-getRanges(), execCommand copy, delete
-
-
-### #1 StaticRanges.
-I propose:
-```webidl
-// Web IDL
-partial interface Selection {
-  sequence<StaticRange> getRanges();
-};
+### StaticRange API.
+```javascript
+document.getSelection().addStaticRange(nodeA, 0, nodeB, 3);
 ```
-This is very simple API and enough to capture user selection for none DOM changing operation(bookmark, change style,,):
+That's all, but it throws exception if added StaticRange overwrapps existing ```getStaticRanges()```.  
+You get all ranges with ```getStaticRanges()```:
 ```javascript
 // javascript
 for (let range of getSelection().getRanges()) {
@@ -106,14 +104,6 @@ for (let range of getSelection().getRanges()) {
   myDb.bookmarkUserSelection(range);
 }
 ```
-
-#### Pros
-- Simple.
-#### Cons
-- No live Range.
-- Even If web author calls ```addRange(range)```, ```getRanges()``` might return different
-number/range of StaticRanges because U.A highlight selection splitting the passed ```range```
-as the scenarios show. 
 
 If web author want to edit content and have live Ranges, they might
 create Range from the StaticRange.
