@@ -72,9 +72,9 @@ for (let range of getSelection().getRanges()) {
 - Simple.
 #### Cons
 - No live Range.
-- Even If web author calls addRange(range), getRanges() might return different
-number/range of StaticRanges because U.A highlight selection splitting the passed range as
-the scenarios show. 
+- Even If web author calls ```addRange(range)```, ```getRanges()``` might return different
+number/range of StaticRanges because U.A highlight selection splitting the passed ```range```
+as the scenarios show. 
 
 If web author want to edit content and have live Ranges, they might
 create Range from the StaticRange.
@@ -111,6 +111,7 @@ With that, the following code illustrates editing with live StaticRanges:
 ```javascript
 // javascript
 async editAsync() {
+  // Call w/o an argument to get the first range iterator.
   var iterator = await window.getSelection().getNextRangeIterator();
   if (!iterator.HasRange) {
     console.log(“no selection”).
@@ -127,15 +128,15 @@ async editAsync() {
 }
 ```
 Point is that web author only can get StaticRange, which is always live, one by one through Promise.
-If some mutation changes remaining ranges, getNextRange return such
+If some mutation changes remaining ranges, ```getNextRangeIterator``` return such
 updated range. Number of iteration also can change in the middle of the loop.
 
 #### Pros
 - Web author accesses fresh ranges w/o Range.
-  - No Range intances increases
+  - No Range intances increases.
   - U.A. can implement another range mutation as web author expect.
 
 #### Cons
 - Complex.
 - What If user change selection while editing?
-- Same for addRange(range) in #1.
+- Same for ```addRange(range)``` in #1.
