@@ -49,26 +49,30 @@ If user select from 'out' to 'bar2', chrome select them excluding 'foo1'.
 However, ```getSelection().getRangeAt(0)``` returns {'out',1, 'bar2', 2}.
 
 ## Problems
-- Back compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
+- Backward compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
 - Performance: Range should mutate syncronousely for DOM mutation(
 [spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
 It means if there are more Ranges, DOM mutation performance gets worse.
 - Complexity: Overwrapped ranges, ```insertOrderedList``` or other DOM mutation commands.
 
 ## Proposition
-We offer
+### Opt-in selection mode
+We have few entry points for multiple Range.
+```javascript
+window.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addrange'];
+```
+Default ```modes``` are empty array and this settings enable multiple ranges.
+- ```multiple-user-ctrl``` enables user to create multiple ranges with ctrl-click/drag.
+- ```multiple-user-layout``` enables user to create multiple ranges with drag/shift-arrowkey on layout order.
+- ```multiple-addrange``` enables webauthor to create multiple ranges with ```addRange``` method.
+
+
+We first offer 
 - for user
 Copy, Delete
 - for web author
 getRanges(), execCommand copy, delete
 
-Chrome needs multiple ranges representation internally for highliting/copy/paste such selected content.
-If web author needs the range too(for example, news paper/ebook web app that can bookmark user selection like kindle.), we should expose the ranges.
-
-However, as we discussed, we don’t want to increase Range instances for performance because Range should
-mutate syncronousely if depending DOM tree is changed[[1](https://github.com/w3c/input-events/issues/38#issuecomment-252309333)], and Range mutation sometimes doesn’t work for web authors expectation[[2](https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)].
-
-Chrome plans to represent multiple ranges w/o DOM Range internally and expose the ranges as not DOM Range.
 
 ### #1 StaticRanges.
 I propose:
