@@ -117,12 +117,12 @@ async editAsync() {
     return;
   }	
   do {
-  const range = iterator.range;
-  console.log(range.startContainer);
-  // Do "dynamic" opration like
-  unbold(domrange);
-  // Get next range iterator by passing current iterator.
-  iterator = await window.getSelection().getNextRangeIterator(iterator);
+    const range = iterator.range;
+    console.log(range.startContainer);
+    // Do "dynamic" opration like
+    unbold(domrange);
+    // Get next range iterator by passing current iterator.
+    iterator = await window.getSelection().getNextRangeIterator(iterator);
   } while (iterator.HasRange);
 }
 ```
