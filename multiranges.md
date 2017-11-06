@@ -117,7 +117,7 @@ async editAsync() {
     return;
   }	
   do {
-    const range = iterator.range;
+    const domrange = iterator.range;
     console.log(range.startContainer);
     // Do "dynamic" opration like
     unbold(domrange);
