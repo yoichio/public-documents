@@ -1,7 +1,10 @@
 # Multi ranges explained
 
-Chrome wants user to be able to select elements intuitively by mouse/touch/keyboard but   
-we need new APIs on [Selection API](https://www.w3.org/TR/selection-api/) to represent such selection for web author.
+Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range), which represents a range
+ on a document.  
+However, if user want to select contents intuitively by mouse/touch/keyboard on following cases, 
+Chrome needs to represent the selection with not one Range.  
+we need new APIs on [Selection API](https://www.w3.org/TR/selection-api/) to expose such selection for web author.
 
 ## Scenarios
 ### Grid Layout
@@ -35,49 +38,67 @@ User might want to select text in reading order neither DOM order nor visibly.
 
 This is the result when I drag from left to right in the middle of ‘Egypt’.
 
-![bidi_select](https://github.com/yoichio/public-documents/blob/master/resources/bidi_select.png)  <br/><br/>
+![bidi_select](https://github.com/yoichio/public-documents/blob/master/resources/bidi_select.png)  
 
-User can select in reading order on Chrome no in DOM order.
+User can select in reading order "bahrain m" on Chrome in this case but that is not DOM order.
 
 Chrome needs multiple ranges representation internally for highliting/copy/paste such selected content.
 If web author needs the range too(for example, news paper/ebook web app that can bookmark user selection like kindle.), we should expose the ranges.
 
-As much discussed, we don’t want to increase Range(let me say DOM Range for correctness) instances for performance[1] and Range mutation sometimes doesn’t work for web authors expectation[2].<br/>
-[1] Replace StaticRange with a dictionary or figure out if normal Ranges could be used ( (2016-09-22, w3c)
-[2] Support multi range selection (2017-05-29, w3c)
+However, as we discussed, we don’t want to increase Range instances for performance because Range should
+mutate syncronousely if depending DOM tree is changed[[1](https://github.com/w3c/input-events/issues/38#issuecomment-252309333)], and Range mutation sometimes doesn’t work for web authors expectation[[2](https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)].
 
 Chrome plans to represent multiple ranges w/o DOM Range internally and expose the ranges as not DOM Range.
 
 ## Proposition
 I propose:
-```
+```webidl
 partial interface Selection {
     sequence<StaticRange> getRanges();
 };
 ```
-This is very simple API and enough to capture user selection for none DOM changing operation(bookmark, change style,,).
-Pros
-	Simple.
-Cons
-	No live Range.
-Even If web author calls addRange(range), getRanges() returns different StaticRanges. 
+This is very simple API and enough to capture user selection for none DOM changing operation(bookmark, change style,,):
+```javascript
+for (let range of getSelection().getRanges()) {
+  /// something "static" opration like
+  myDb.bookmarkUserSelection(range);
+}
+```
+
+### Pros
+- Simple.
+### Cons
+- No live Range.
+- Even If web author calls addRange(range), getRanges() returns different StaticRanges. 
 
 If web author want to edit content and have live Ranges, they might
 create Range from the StaticRange.
-However, Range mutation doesn’t already work as web aurhor expects:
-https://github.com/w3c/selection-api/issues/41#issuecomment-289924788 
-I’m thinking another API using Promise chain:
+```javascript
+let ranges = [];
+for (let range of getSelection().getRanges()) {
+  let domrange = document.createRange();
+  domrange.setStart(range.startContainer, range.startOffset);
+  domrange.setEnd(range.endContainer, range.endOffset);
+  ranges.push(domrange);
+}
+for (let domrange of ranges) {
+  /// something "dynamic" opration like
+  unbold(domrange);
+}
 ```
+However, this might not work because Range mutation doesn’t already work as web aurhor expects[[2](
+https://github.com/w3c/selection-api/issues/41#issuecomment-289924788)] though it is well specified.      
+I’m thinking another API using Promise chain:
+```webidl
 partial interface Selection {
-    Promise<RangeIterator> getNextRangeIterator(
-optional RangeIterator iterator);
+    Promise<RangeIterator> getNextRangeIterator(optional RangeIterator iterator);
 };
 interface RangeIterator {
  readonly attribute boolean HasRange;
  readonly attribute StaticRange;
 }
 ```
-The following code illustrates editing with live StaticRanges:
+With that, the following code illustrates editing with live StaticRanges:
 ```javascript
 async editAsync() {
 	var iterator= await window.getSelection().getNextRangeIterator();
@@ -97,11 +118,11 @@ Point is web aurhor only can get StaticRange one by one through Promise.
 If some mutation changes remaining ranges, getNextRange return such
 updated range. Number of iteration also can change in the middle of the loop.
 
-Pros
-Web author accesses fresh ranges w/o Range. U.A. can implement another range mutation.
+### Pros
+- Web author accesses fresh ranges w/o Range. U.A. can implement another range mutation.
 
-Cons
-Complex.
-What If user change selection while editing?
-Even If web author calls addRange(range), getNextRangeIterator returns different
+### Cons
+- Complex.
+- What If user change selection while editing?
+- Even If web author calls addRange(range), getNextRangeIterator returns different
 ranges.
