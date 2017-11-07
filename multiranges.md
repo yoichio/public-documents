@@ -115,7 +115,6 @@ We say selection is DOM-contiguous if there is only one StaticRange or a caret.
 Selection is DOM-contiguous if ```getSelection().getStaticRanges().length == 1```  
 If selection is DOM-contiguous, the user agent offers exisiting functionality
 (text input, expanding selection, execCommand, etc...).  
-(can it also accepets one "visible-contiguous" Range on ```'multiple-user-layout'``` mode?)
 
 ### Editing API for web author
 
@@ -125,7 +124,7 @@ document.getSelection().addStaticRange(nodeA, 0, nodeB, 3);
 ```
 That's all, but it throws exception if added StaticRange overwrapps existing ```getStaticRanges()```.  
 (what if ```addStaticRange()``` on ```'multiple-user-layout'``` ?)    
-(throwing exception or merging into existing one is a topic)
+(throwing exception or merging into existing one is a topic)  
 You get all ranges with ```getStaticRanges()```:
 ```javascript
 for (let range of getSelection().getStaticRanges()) {
