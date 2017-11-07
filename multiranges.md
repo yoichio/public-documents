@@ -5,7 +5,7 @@ Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range
 However, there are cases where user want to select contents which can not
 be represented with one Range.  
 Chrome wants to offer such selection for user and/or web author balancing between capability and stability.  
-It is opt-in, StaticRange and few execCommands.
+It is opt-in, StaticRange and &#x1F34E; a few execCommands.
 
 ## Cases we need multiple ranges
 ### Ctrl-click
@@ -51,25 +51,26 @@ However, ```getSelection().getRangeAt(0)``` returns {'out',1, 'bar2', 2}.
 ## Problems to implement full multiple Ranges 
 If we simply implement multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
 there are many issues:
-- Backward compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
+- &#x1F34E; Backward compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
 - Performance: Range should mutate syncronousely for DOM mutation(
 [spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
 It means if there are more Ranges, DOM mutation performance gets worse.
 - Complexity: Overwrapped ranges, ```insertOrderedList``` or other DOM mutation commands.
 
-## Proposition
+## &#x1F34E; Proposition
 ### Opt-in selection mode
 We have a couple of entry points for multiple Range.
 ```javascript
-window.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
+window.modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
 ```
+?
 Default ```modes``` are empty array, in which U.A behaves as-is.  
 Setting ```modes``` enables multiple ranges:
 - ```multiple-user-ctrl``` enables user to create multiple ranges with ctrl-click/drag.
 - ```multiple-user-layout``` enables user to create multiple ranges with drag/shift-arrowkey on layout order.
 - ```multiple-addstaticrange``` enables webauthor to create multiple ranges with ```addStaticRange``` method.
-
-### No overwrapping
+&#x1F34E; examples
+### No &#x1F34E; overlap overwrapping
 Any mode doesn't create/allow overwrapping Ranges.
 
 ### Editing functionality for user
@@ -89,7 +90,7 @@ through ```getTargetRanges()```. Ditto to delete and cut.
 #### Invalidating existing Range API.
 ```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception.
 That's because I want web author to avoid performance footgun of Range.
-
+&#x1F34E; extend existing selection.
 ### StaticRange API.
 ```javascript
 document.getSelection().addStaticRange(nodeA, 0, nodeB, 3);
@@ -105,6 +106,7 @@ for (let range of getSelection().getStaticRanges()) {
 
 If web author wants to edit content and keep live Ranges, they might
 create Range from StaticRange.
+&#x1F34E; order
 ```javascript
 let ranges = [];
 // Collect all ranges before editing.
