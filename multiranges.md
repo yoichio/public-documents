@@ -60,54 +60,69 @@ We want multiple ranges of ```{'out', 1, 'out', 3}``` and
 ## Problems to implement full multiple Ranges 
 If we simply implement such multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
 there are many issues:
-- Backward compatibility: Many sites assume user selection is a Range and use only ```getRangeAt(0)```, which
-returns the Range of {<start of mouse drag>, <end of mouse drag>}. That is broken on grid layout and Shadow DOM cases. 
-- Performance: Range should mutate syncronousely for DOM mutation(
+- Backward compatibility
+  - Many sites assume user selection is a Range and use only ```getRangeAt(0)```, which
+returns the Range of {\<start of mouse drag>, \<end of mouse drag>}. That is broken on the grid layout and Shadow DOM cases. 
+- Performance
+  - Range should mutate syncronousely for DOM mutation(
 [spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
 It means if there are more Ranges, DOM mutation performance gets worse.
 - Complexity:
   - What if there are overlrapping ranges? 
   - ```insertOrderedList``` or other execCommands assumpt one Range.
 
-## &#x1F34E; Proposition
+## Proposed API
 ### Opt-in selection mode
-We have a couple of entry points for multiple Range.
+The user agent has a couple of entry points to create multiple Ranges.
 ```javascript
-window.modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
+document.getSelection().modes = ['multiple-user-ctrl', 'multiple-user-layout', 'multiple-addstaticrange'];
 ```
-?
-Default ```modes``` are empty array, in which U.A behaves as-is.  
+Default ```modes``` are empty array, on which the user agent behaves as-is.  
 Setting ```modes``` enables multiple ranges:
-- ```multiple-user-ctrl``` enables user to create multiple ranges with ctrl-click/drag.
-- ```multiple-user-layout``` enables user to create multiple ranges with drag/shift-arrowkey on layout order.
-- ```multiple-addstaticrange``` enables webauthor to create multiple ranges with ```addStaticRange``` method.
-&#x1F34E; examples
-### No &#x1F34E; overlap overwrapping
+- ```'multiple-user-ctrl'``` enables user to create multiple ranges with ctrl-click/drag:  
+![img](resources/ctrl-click.png)
+- ```'multiple-user-layout'``` enables user to create multiple ranges with drag/shift-arrowkey on layout order:  
+![grid](resources/grid-expected.png)  
+- ```'multiple-addstaticrange'``` enables webauthor to create multiple ranges with ```{add/get}StaticRange(s)``` methods:  
+
+```javascript
+        for (let range of getSelection().getStaticRanges()) myDb.bookmarkUserSelection(range);
+```
+You can set any conbination of mode:
+```javascript
+document.getSelection().modes = ['multiple-user-layout', 'multiple-addstaticrange'];
+```
+
+### No overlapping Range
 Any mode doesn't create/allow overwrapping Ranges.
 
 ### Editing functionality for user
-We offer user only 
+If ```'multiple-user-ctrl'```  and/or ```'multiple-user-layout'``` turn on
+ and there is selection,
+the user agent offers user a few editing functionality:
 - copy  
 So that user can get contents they are selecting.  
 
-- delete, cut(copy + delete)  
+- delete, cut(copy + delete), undo, redo
 If ```modes``` include ```multiple-user-ctrl```, that is also useful.
 
-I'm considering the operation inserting text onto multiple ranges simultaniously.
+- I'm considering the operation inserting text onto multiple ranges simultaniously.
 Web author can implement it with
-[Input Events](https://www.w3.org/TR/input-events-2/) if we pass multiple ranges
+[Input Events](https://www.w3.org/TR/input-events-2/) if the user agent passes multiple ranges
 through ```getTargetRanges()```. Ditto to delete and cut.
 
+If there is only one DOM-contiguous Range or a caret, the user agent offers exisiting functionality
+(text input, expanding selection, execCommand, etc...).  
+(can it also accepets one "visible-contiguous" Range on ```'multiple-user-layout'``` mode?)
+
 ### Editing API for web author
-#### Invalidating existing Range API.
-```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception.
-That's because I want web author to avoid performance footgun of Range.
-&#x1F34E; extend existing selection.
-### StaticRange API.
+
+#### StaticRange API.
 ```javascript
 document.getSelection().addStaticRange(nodeA, 0, nodeB, 3);
 ```
 That's all, but it throws exception if added StaticRange overwrapps existing ```getStaticRanges()```.  
+(throwing exception or merging into existing one is a topic)
 You get all ranges with ```getStaticRanges()```:
 ```javascript
 for (let range of getSelection().getStaticRanges()) {
@@ -115,10 +130,10 @@ for (let range of getSelection().getStaticRanges()) {
   myDb.bookmarkUserSelection(range);
 }
 ```
+(Order of ranges are not decided yet. Just appended order as user drag and ```addStaticRange()```?) 
 
 If web author wants to edit content and keep live Ranges, they might
 create Range from StaticRange.
-&#x1F34E; order
 ```javascript
 let ranges = [];
 // Collect all ranges before editing.
@@ -134,6 +149,10 @@ for (let domrange of ranges) {
 }
 ```
 
+#### Invalidating existing Range API.
+Once ```getSelection().modes``` are enabled, ```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception.
+That's because ```addRange()```  I want web author to avoid performance footgun of Range.
+&#x1F34E; extend existing selection.
 ### Limited execCommand
 Only 'copy', 'undo', 'redo' are allowed because many execCommands are 'macro' operation
  of DOM mutation on one Range.
