@@ -104,12 +104,12 @@ the user agent offers user a few editing functionality:
 So that user can get contents they are selecting.  
 
 - delete, cut(copy + delete), undo, redo
-If ```modes``` include ```multiple-user-ctrl```, that is also useful.
+If ```modes``` include ```multiple-user-ctrl```.
 
-- I'm considering the operation inserting text onto multiple ranges simultaniously.
+- (I'm considering the operation inserting text onto multiple ranges simultaniously.
 Web author can implement it with
 [Input Events](https://www.w3.org/TR/input-events-2/) if the user agent passes multiple ranges
-through ```getTargetRanges()```. Ditto to delete and cut.
+through ```getTargetRanges()```. Ditto to delete and cut.)
 
 If there is only one DOM-contiguous Range or a caret, the user agent offers exisiting functionality
 (text input, expanding selection, execCommand, etc...).  
@@ -150,9 +150,9 @@ for (let domrange of ranges) {
 ```
 
 #### Invalidating existing Range API.
-Once ```getSelection().modes``` are enabled, ```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception.
-That's because ```addRange()```  I want web author to avoid performance footgun of Range.
-&#x1F34E; extend existing selection.
-### Limited execCommand
+Once ```getSelection().modes``` are enabled, ```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception. Web author should interect selection ranges through ```getStaticRanges()``` and 
+```addStaticRange()```.  
+
+#### Limited execCommand
 Only 'copy', 'undo', 'redo' are allowed because many execCommands are 'macro' operation
  of DOM mutation on one Range.
