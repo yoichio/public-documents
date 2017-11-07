@@ -83,12 +83,12 @@ Setting ```modes``` enables multiple ranges:
 ![img](resources/ctrl-click.png)
 - ```'multiple-user-layout'``` enables user to create multiple ranges with drag/shift-arrowkey on layout order:  
 ![grid](resources/grid-expected.png)  
-- ```'multiple-addstaticrange'``` enables webauthor to create multiple ranges with ```{add/get}StaticRange(s)``` methods:  
+- ```'multiple-addstaticrange'``` enables webauthor to create multiple ranges with ```addStaticRange()``` and ```getStaticRanges()``` methods:  
 
 ```javascript
         for (let range of getSelection().getStaticRanges()) myDb.bookmarkUserSelection(range);
 ```
-You can set any conbination of mode:
+You can set any combination of mode:
 ```javascript
 document.getSelection().modes = ['multiple-user-layout', 'multiple-addstaticrange'];
 ```
@@ -111,7 +111,9 @@ Web author can implement it with
 [Input Events](https://www.w3.org/TR/input-events-2/) if the user agent passes multiple ranges
 through ```getTargetRanges()```. Ditto to delete and cut.)
 
-If there is only one DOM-contiguous Range or a caret, the user agent offers exisiting functionality
+We say selection is DOM-contiguous if there is only one DOM-contiguous Range or a caret.  
+Selection is DOM-contiguous if ```getSelection().getStaticRanges().length == 1```  
+If selection is DOM-contiguous, the user agent offers exisiting functionality
 (text input, expanding selection, execCommand, etc...).  
 (can it also accepets one "visible-contiguous" Range on ```'multiple-user-layout'``` mode?)
 
@@ -150,9 +152,11 @@ for (let domrange of ranges) {
 ```
 
 #### Invalidating existing Range API.
-Once ```getSelection().modes``` are enabled, ```rangeCount``` returns 0, ```addRange()``` does nothing and ```getRangeAt()``` always throws exception. Web author should interect selection ranges through ```getStaticRanges()``` and 
+If selection is not contiguous,  ```rangeCount```, ```addRange()```, ```getRangeAt()``` and ```removeRange()``` always throws exception.  (any other APIs to consider?)
+Web author should interect selection ranges through ```getStaticRanges()``` and 
 ```addStaticRange()```.  
+We can clear selection with ```removeAllRanges()```.
 
 #### Limited execCommand
-Only 'copy', 'undo', 'redo' are allowed because many execCommands are 'macro' operation
+If selection is not contiguous, only 'copy', 'undo', 'redo' are allowed because many execCommands are 'macro' operation
  of DOM mutation on one Range.
