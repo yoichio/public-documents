@@ -9,7 +9,7 @@ I propose multi range functionality, which is opt-in, made from StaticRange and 
 
 ## Cases we need multiple ranges
 ### Ctrl-click
-On Firefox, user can select discontigous DOM Range with ctrl-click/drag.
+On Firefox, user can select discontigous DOM Range with ctrl-click/drag.  
 ![img](resources/ctrl-click.png)  
 #### Table
 ![table](resources/table.png)  
@@ -29,7 +29,7 @@ Following code demostrate grid layout reorder.
 </div>
 ```
 In that case, user drag from first grid to second one to select ```'oo1 bar1 content3 f'```
- but ```'content2 foo2 bar2'``` of third grid is included.
+ but ```'content2 foo2 bar2'``` of third grid is included.  
 ![grid](resources/grid.png)  
 We want multiple ranges of ```{'content1 foo1 bar1', 10, 'content1 foo1 bar1', 18}``` and
 ```{'content3 foo3 bar3', 0, 'content3 foo3 bar3', 10}``` so that user selects:  
@@ -54,8 +54,8 @@ However, ```getSelection().getRangeAt(0)``` returns Range of ```{'out',1, 'bar2'
 ```'foo1'```.  
 We want multiple ranges of ```{'out', 1, 'out', 3}``` and
 ```{'bar2', 0, 'bar2', 2}``` so that web author can know which nodes in root document are exactly selected.  
-(There is ```host.ShadowRoot.getSelection()``` which is not ```doument.getSelection()```. What ranges ```host.ShadowRoot.getSelection()``` represents in this case is also topic but since I don't expose Shadow DOM to   
-```doument.getSelection()```, that is another theme.)
+(There is ```host.ShadowRoot.getSelection()``` which is not ```doument.getSelection()```. What ranges ```host.ShadowRoot.getSelection()``` represents in this case is also topic but since the user agent
+should not expose Shadow DOM to```doument.getSelection()```, that is another theme.)
 
 ## Problems to implement full multiple Ranges 
 If we simply implement such multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
