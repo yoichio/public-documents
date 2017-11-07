@@ -1,11 +1,11 @@
 # Minimal multi ranges explained
 
 Chrome implements user selection as one [Range](https://www.w3.org/TR/dom/#range), which represents a range
- on a document.  
+ on a document like ```{nodeA, 5, nodeB, 3}```.  
 However, there are cases where user want to select contents which can not
 be represented with one Range.  
 Chrome wants to offer such selection for user and/or web author balancing between capability and stability.  
-It is opt-in, StaticRange and &#x1F34E; a few execCommands.
+I propose multi range functionality, which is opt-in, made from StaticRange and accepts a few execCommands.
 
 ## Cases we need multiple ranges
 ### Ctrl-click
@@ -13,6 +13,7 @@ On Firefox, user can select discontigous DOM Range with ctrl-click/drag.
 ![img](resources/ctrl-click.png)  
 #### Table
 ![table](resources/table.png)  
+User can't select so on Chrome.
 
 ### Grid Layout
 Following code demostrate grid layout reorder.
@@ -27,9 +28,12 @@ Following code demostrate grid layout reorder.
 <div style="grid-row:2">content3 foo3 bar3</div>
 </div>
 ```
-In that case, user drag from first grid to second one to select those elements but
-“content2” of third grid is also selected.
-![grid](https://github.com/yoichio/public-documents/blob/master/resources/grid.png)
+In that case, user drag from first grid to second one to select ```'oo1 bar1 content3 f'```
+ but ```'content2 foo2 bar2'``` of third grid is included.
+![grid](resources/grid.png)  
+We want multiple ranges of ```{'content1 foo1 bar1', 10, 'content1 foo1 bar1', 18}``` and
+```{'content3 foo3 bar3', 0, 'content3 foo3 bar3', 10}``` so that user selects:  
+![grid](resources/grid-expected.png)  
 
 ### Shadow DOM
 Following code demostrate Shadow DOM layout nodes reorder.
@@ -44,18 +48,26 @@ out
   "<slot name=s2></slot><slot name=s1></slot>";
 </script>
 ```
-If user select from 'out' to 'bar2', chrome select them excluding 'foo1'.  
+If user select from ```'out'``` to ```'bar2'```, chrome selects them excluding ```'foo1'```.  
 ![img](resources/shadow2.png)  
-However, ```getSelection().getRangeAt(0)``` returns {'out',1, 'bar2', 2}.
+However, ```getSelection().getRangeAt(0)``` returns Range of ```{'out',1, 'bar2', 2}``` that includes
+```'foo1'```.  
+We want multiple ranges of ```{'out', 1, 'out', 3}``` and
+```{'bar2', 0, 'bar2', 2}``` so that web author can know which nodes in root document are exactly selected.  
+(There is ```host.ShadowRoot.getSelection()``` which is not ```doument.getSelection()```. What ranges ```host.ShadowRoot.getSelection()``` represents in this case is also topic but since I don't expose Shadow DOM to   
+```doument.getSelection()```, that is another theme.)
 
 ## Problems to implement full multiple Ranges 
-If we simply implement multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
+If we simply implement such multiple Ranges on ```addRange()```,```rangeCount``` and ```getRangeAt()```,
 there are many issues:
-- &#x1F34E; Backward compatibility: Many cites assume user selection is a Range and use only ```getRangeAt(0)```.
+- Backward compatibility: Many sites assume user selection is a Range and use only ```getRangeAt(0)```, which
+returns the Range of {<start of mouse drag>, <end of mouse drag>}. That is broken on grid layout and Shadow DOM cases. 
 - Performance: Range should mutate syncronousely for DOM mutation(
 [spec](https://www.w3.org/TR/2000/PR-DOM-Level-2-Traversal-Range-20000927/ranges.html#Level-2-Range-Mutation)).
 It means if there are more Ranges, DOM mutation performance gets worse.
-- Complexity: Overwrapped ranges, ```insertOrderedList``` or other DOM mutation commands.
+- Complexity:
+  - What if there are overlrapping ranges? 
+  - ```insertOrderedList``` or other execCommands assumpt one Range.
 
 ## &#x1F34E; Proposition
 ### Opt-in selection mode
