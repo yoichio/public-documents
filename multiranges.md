@@ -111,7 +111,7 @@ Web author can implement it with
 [Input Events](https://www.w3.org/TR/input-events-2/) if the user agent passes multiple ranges
 through ```getTargetRanges()```. Ditto to delete and cut.)
 
-We say selection is DOM-contiguous if there is only one DOM-contiguous Range or a caret.  
+We say selection is DOM-contiguous if there is only one StaticRange or a caret.  
 Selection is DOM-contiguous if ```getSelection().getStaticRanges().length == 1```  
 If selection is DOM-contiguous, the user agent offers exisiting functionality
 (text input, expanding selection, execCommand, etc...).  
@@ -124,6 +124,7 @@ If selection is DOM-contiguous, the user agent offers exisiting functionality
 document.getSelection().addStaticRange(nodeA, 0, nodeB, 3);
 ```
 That's all, but it throws exception if added StaticRange overwrapps existing ```getStaticRanges()```.  
+(what if ```addStaticRange()``` on ```'multiple-user-layout'``` ?)    
 (throwing exception or merging into existing one is a topic)
 You get all ranges with ```getStaticRanges()```:
 ```javascript
