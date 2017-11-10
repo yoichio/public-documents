@@ -1,10 +1,5 @@
 # [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
-In this document, I explain Selection API issues on Shadow DOM and propose spec modification.  
-
-Selection API defines selection as it is unique on a document which consists of one node tree.  
-However, Shadow DOM inserts other node trees into a document recursively and we don't expose contents in the trees through javascript API.  
-That has made Selection API not working for Shadow DOM.([reported issue](https://github.com/w3c/webcomponents/issues/79))  
-Also there are interop issues between user agents' implementation.  
+In this document, I explain selection issues on Shadow DOM and propose spec modification.  
 
 ## Selection API Example
 Following code illustrates a normal text and a bold text:
@@ -14,8 +9,9 @@ foo<b>bar</b>
 ![image](resources/foobar.png)  
 If the user drag mouse from ```'foo'``` to ```'bar'```,  
 ![image](resources/foobar2.png)  
-In this situation, ```document.getSelection()``` returns a Selection associated with a Range of ```{'foo',1, 'bar', 2}```.
+In this situation, ```document.getSelection().getRangeAt(0)``` returns a Range of ```{'foo',1, 'bar', 2}```.
 It means "a range after 'f' in 'foo' node to after 'a' in  'bar' node.  
+If no selection, ```document.getSelection().rangeCount``` returns ```0``` so that web author might not call ```getRangeAt(0)```.
 
 Selection API also offers setting user selection by javascript:
 ```javascript
@@ -27,6 +23,8 @@ range.setEnd(bar, 2);
 document.getSelection().addRange(range);
 ```
 This makes same selection.
+
+```document.getSelection()``` returns a singleton Selection object. Shadow DOM also has another Selection object. ```shadowRoot.getSelection()``` returns an unique Selection object per ShadowRoot.
 
 ## Support table
 |                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png) | ![img](resources/firefox.png) | ![img](resources/edge.png) |
@@ -49,21 +47,26 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 ```
 ![image](resources/shadow.png)  
 
-Let's see what happens if the user drags mouse and web author want its selection.
+Let's see what happens if the user drags mouse and the web author wants its selection.
 
 ### #1. outer->inner  
 The user drags mouse from ```'outer'``` to ```'inner'```.  
 
-|                           |   Chrome  | Safari |
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
 |------------               |:---------:|:------:|
 | User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
-| ```document.getSelection()``` |  ```{‘outer’,2, ‘outer’, 5}```      |  ```{‘outer’,2, ‘outer’, 5}```  |
-| ```shadowRoot.getSelection()``` |  empty     |  N/A  |
+| ```document.getSelection().getRangeAt(0)``` |  ```{‘outer’,2, ‘outer’, 5}```      |  ```{‘outer’,2, ‘outer’, 5}```  |
+| ```shadowRoot.getSelection().getRangeAt(0)``` |  (throw exception because no range)     |  N/A  |
+
+- Chrome allows the user going int Shadow DOM. It violates spec.
+- Safari prohibits the user go into Shadow DOM. It follows spec.
+- User can copy highlight text.
+- At any case, shadow author can't know its content is selected.
 
 ### #2. inner->outer  
 The user drags mouse from ```'inner'``` to ```'outer'```.  
 
-|                           |   Chrome  | Safari |
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
 |------------               |:---------:|:------:|
 | User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
 | ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
@@ -72,11 +75,17 @@ The user drags mouse from ```'inner'``` to ```'outer'```.
 ### #3. Only inner  
 The user drags mouse inside ```'inner'```.  
 
-|                           |   Chrome  | Safari |
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
 |------------               |:---------:|:------:|
 | User selection            |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
 | ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
 | ```shadowRoot.getSelection()``` |  ```{‘inner’, 1, ‘inner’, 4}```     |  N/A  |
+
+## Spec detail
+Selection API defines selection as it is unique on a document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object.  
+However, Shadow DOM inserts other node trees into a document recursively and we don't expose contents in the trees through javascript API. Shadow DOM also has another Selection object. ```shadowRoot.getSelection()``` returns an unique Selection object per ShadowRoot.
+That specification makes Selection API not working for Shadow DOM.([reported issue](https://github.com/w3c/webcomponents/issues/79))  
+Also there are interop issues between user agents' implementation.  
 
 ## Key points
 - The user can copy hilight text in any case.
