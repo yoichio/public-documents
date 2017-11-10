@@ -9,10 +9,10 @@ Also there are interop issues between user agents' implementation.
 ## Support table
 |                           |   Chrome  | Safari | Firefox | Edge |
 |------------               |:---------:|:------:|:------:|:------:|
-| document.getSelection()   |    ✔️     |   ✔️   |✔️|✔️|
+| ```document.getSelection()```   |    ✔️     |   ✔️   |✔️|✔️|
 | Shadow DOM                |  ✔️       | ✔️     | (in development) | (under consideration) | 
 | User selection for Shadow | ❗(see example) | ❗(see example)  | N/A| N/A |
-| shadowRoot.getSelection() |  ❗(see example)      |  undefined  | N/A| N/A |
+| ```shadowRoot.getSelection()``` |  ❗(see example)      |  undefined  | N/A| N/A |
 
 ## Examples
 Following code illustrates very simple Shadow DOM:
@@ -28,19 +28,13 @@ Let's see what happens if the user drag mouse in various ways.
 
 ### #1. outer->inner  
 The user drags mouse from ```'outer'``` to ```'inner'```.  
+
 |                           |   Chrome  | Safari |
 |------------               |:---------:|:------:|
-| User selection   |    a       |   ✔️   |
-| shadowRoot.getSelection() |  ❗(see example)      |  undefined  | 
+| User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
+| ```document.getSelection()``` |  ```{‘outer’,2, ‘outer’, 5}```      |  ```{‘outer’,2, ‘outer’, 5}```  |
+| ```shadowRoot.getSelection()``` |  ```{null, 0, null, 0}```      |  undefined  |
 
-#### Chrome
-![image](resources/outerinner-chrome.png)   
-```javascript
-document.getSelection() = {‘outer’,2, ‘outer’, 5};
-host.shadowRoot.getSelection() = {null, 0, null, 0};
-Safari
-
-document.getSelection() = {‘outer’,2, ‘outer’, 5};
 
 ### #2. inner->outer  
 Chrome
