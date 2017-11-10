@@ -1,6 +1,6 @@
 # [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
 In this document, I explain selection issues on Shadow DOM and propose spec modification.  
-**This proposition do NOT change number of Range**
+**This proposition is NOT about multiple Ranges.**
 
 ## Selection API Example w/o Shadow
 Following code illustrates a normal text and a bold text:
