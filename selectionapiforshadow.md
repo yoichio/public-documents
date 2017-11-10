@@ -50,8 +50,7 @@ The user drags mouse from ```'inner'``` to ```'outer'```.
 |                           |   Chrome  | Safari |
 |------------               |:---------:|:------:|
 | User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
-| ```document.getSelection()``` |  ```{document.body,1,```      |  ```{document.body,1,```  |
-|  |  ```  document.body, 1}```      |  ```  document.body, 1}```  |
+| ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
 | ```shadowRoot.getSelection()``` |  ```{‘inner’, 3, ‘inner’, 0}```     |  N/A  |
 
 ### #3. Only inner  
@@ -60,12 +59,12 @@ The user drags mouse inside ```'inner'```.
 |                           |   Chrome  | Safari |
 |------------               |:---------:|:------:|
 | User selection            |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
-| ```document.getSelection()``` |  ```{document.body,1, document.body, 1}```      |  ```{document.body,1, document.body, 1}```  |
+| ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
 | ```shadowRoot.getSelection()``` |  ```{‘inner’, 1, ‘inner’, 4}```     |  N/A  |
 
 ## 
 
-Except javascript API, Safari implementation follows spec that prohibits the user crossing shadow but permits inner shadow.
+Except javascript API, Safari implementation follows spec which prohibits the user to select crossing shadow but permits to select inner shadow.
 Though there are many other cases like outer->innter->moreinner, inner->outer->anotherinner, I want to get a consensus about this simplest case first. 
 
 
