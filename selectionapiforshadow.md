@@ -1,5 +1,5 @@
-# [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
-In this document, I explain selection issues on Shadow DOM and propose spec modification.  
+# [Selection API](https://www.w3.org/TR/selection-api/) proposition for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
+In this document, I explain selection cases on Shadow DOM and propose spec modification.  
 **This proposition is NOT about [multiple Ranges](https://github.com/w3c/selection-api/issues/41).**
 
 ## Selection API Example w/o Shadow
