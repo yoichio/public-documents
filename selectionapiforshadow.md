@@ -1,7 +1,7 @@
 # [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
 In this document, I explain Selection API issues on Shadow DOM and propose spec modification.  
 
-Selection API defines selection as it is unique on a ducument which consists of one node tree.  
+Selection API defines selection as it is unique on a document which consists of one node tree.  
 However, Shadow DOM inserts other node trees into a document recursively and we don't expose contents in the trees through javascript API.  
 That has made Selection API not working for Shadow DOM.([reported issue](https://github.com/w3c/webcomponents/issues/79))  
 Also there are interop issues between user agents' implementation.  
@@ -13,19 +13,33 @@ foo<b>bar</b>
 ```
 ![image](resources/foobar.png)  
 If the user drag mouse from ```'foo'``` to ```'bar'```,  
-![image](resources/foobar-select.png)  
-In this situation, ```document.getSelection()``` returns a Selection associated with a Range of ```{'foo',1, 'bar', 1}```.  
-Selection API also offers setting user selection by javascript, but it is another topic.
+![image](resources/foobar2.png)  
+In this situation, ```document.getSelection()``` returns a Selection associated with a Range of ```{'foo',1, 'bar', 2}```.
+It means "a range after 'f' in 'foo' node to after 'a' in  'bar' node.  
+
+Selection API also offers setting user selection by javascript:
+```javascript
+let range = document.createRange();
+let foo = document.body.firstChild;
+let bar = foo.nextSibling.firstChild;
+range.setStart(foo, 1);
+range.setEnd(bar, 2);
+document.getSelection().addRange(range);
+```
+This makes same selection.
 
 ## Support table
-|                           |   Chrome  | Safari | Firefox | Edge |
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png) | ![img](resources/firefox.png) | ![img](resources/edge.png) |
 |------------               |:---------:|:------:|:------:|:------:|
 | ```document.getSelection()```   |    ✔️     |   ✔️   |✔️|✔️|
 | Shadow DOM                |  ✔️       | ✔️     | (in development) | (under consideration) | 
 | User selection for Shadow | ❗(see example) | ❗(see example)  | N/A| N/A |
 | ```shadowRoot.getSelection()``` |  ❗(see example)      |  ```undefined```  | N/A| N/A |
 
-## Shadow DOM Examples
+So far, Chrome and Safari implement Shadow DOM.  
+Both user selection and javascript API on each browser don't work well for Shadow DOM. Let's see it.
+## Case 1: User select Shadow DOM
+
 Following code illustrates very simple Shadow DOM:
 ```html
 outer<span id=host></span>
@@ -35,7 +49,7 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 ```
 ![image](resources/shadow.png)  
 
-Let's see what happens if the user drags mouse in various ways.
+Let's see what happens if the user drags mouse and web author want its selection.
 
 ### #1. outer->inner  
 The user drags mouse from ```'outer'``` to ```'inner'```.  
