@@ -1,17 +1,28 @@
-UA Implements
-Chrome
-document.getSelection();
-host.shadowRoot.getSelection();
-Safari
-document.getSelection();
-host.shadowRoot.getSelection() is undefined.
-Firefox, Edge
-no shadow dom yet(coming!)
-Cases
+# [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
+In this document, I explain Selection API issues on Shadow DOM and propose spec modification.  
+
+Selection API defines selection as it is unique on a ducument which consists of one node tree.  
+However, Shadow DOM inserts other node trees into a document recursively and we don't expose contents in the trees with javascript API.  
+That has made Selection API not working for Shadow DOM.([reported issue](https://github.com/w3c/webcomponents/issues/79))  
+Also there are interop issues between user agents' implementation.  
+
+## Support table
+|                           |   Chrome  | Safari | Firefox | Edge |
+|------------               |:---------:|:------:|:------:|:------:|
+| document.getSelection()   |    ✔️     |   ✔️   |✔️|✔️|
+| Shadow DOM                |  ✔️       | ✔️     | (in development) | (under consideration) | 
+| shadowRoot.getSelection() |  ✔️       |  undefined  | N/A| N/A |
+
+## Examples
+Following code demonstrate very simple Shadow DOM:
+```html
 outer<span id=host></span>
 <script>
 host.attachShadow({mode:'open'}).innerHTML = 'inner';
 </script>
+```
+
+
 #1. outer->inner
 Chrome
 
