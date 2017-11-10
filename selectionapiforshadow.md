@@ -1,7 +1,7 @@
 # [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
 In this document, I explain selection issues on Shadow DOM and propose spec modification.  
 
-## Selection API Example
+## Selection API Example w/o Shadow
 Following code illustrates a normal text and a bold text:
 ```html
 foo<b>bar</b>
@@ -9,6 +9,7 @@ foo<b>bar</b>
 ![image](resources/foobar.png)  
 If the user drag mouse from ```'foo'``` to ```'bar'```,  
 ![image](resources/foobar2.png)  
+```document.getSelection()``` returns a singleton Selection object per document. 
 In this situation, ```document.getSelection().getRangeAt(0)``` returns a Range of ```{'foo',1, 'bar', 2}```.
 It means "a range after 'f' in 'foo' node to after 'a' in  'bar' node.  
 If no selection, ```document.getSelection().rangeCount``` returns ```0``` so that web author might not call ```getRangeAt(0)```.
@@ -24,8 +25,6 @@ document.getSelection().addRange(range);
 ```
 This makes same selection.
 
-```document.getSelection()``` returns a singleton Selection object. Shadow DOM also has another Selection object. ```shadowRoot.getSelection()``` returns an unique Selection object per ShadowRoot.
-
 ## Support table
 |                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png) | ![img](resources/firefox.png) | ![img](resources/edge.png) |
 |------------               |:---------:|:------:|:------:|:------:|
@@ -35,6 +34,7 @@ This makes same selection.
 | ```shadowRoot.getSelection()``` |  ❗(see example)      |  ```undefined```  | N/A| N/A |
 
 So far, Chrome and Safari implement Shadow DOM.  
+Chrome implements ```shadowRoot.getSelection()```, which returns an unique Selection object per ShadowRoot.  
 Both user selection and javascript API on each browser don't work well for Shadow DOM. Let's see it.
 ## Case 1: User select Shadow DOM
 
@@ -49,37 +49,17 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 
 Let's see what happens if the user drags mouse and the web author wants its selection.
 
-### #1. outer->inner  
-The user drags mouse from ```'outer'``` to ```'inner'```.  
-
-|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
-|------------               |:---------:|:------:|
-| User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
-| ```document.getSelection().getRangeAt(0)``` |  ```{‘outer’,2, ‘outer’, 5}```      |  ```{‘outer’,2, ‘outer’, 5}```  |
-| ```shadowRoot.getSelection().getRangeAt(0)``` |  (throw exception because no range)     |  N/A  |
+|   From | To                        |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|--------|----               |:---------:|:------:|
+| ```'outer'``` | ```'inner'```   |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
+|  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
+| ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
 
 - Chrome allows the user going int Shadow DOM. It violates spec.
 - Safari prohibits the user go into Shadow DOM. It follows spec.
 - User can copy highlight text.
 - At any case, shadow author can't know its content is selected.
 
-### #2. inner->outer  
-The user drags mouse from ```'inner'``` to ```'outer'```.  
-
-|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
-|------------               |:---------:|:------:|
-| User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
-| ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
-| ```shadowRoot.getSelection()``` |  ```{‘inner’, 3, ‘inner’, 0}```     |  N/A  |
-
-### #3. Only inner  
-The user drags mouse inside ```'inner'```.  
-
-|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
-|------------               |:---------:|:------:|
-| User selection            |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
-| ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
-| ```shadowRoot.getSelection()``` |  ```{‘inner’, 1, ‘inner’, 4}```     |  N/A  |
 
 ## Spec detail
 Selection API defines selection as it is unique on a document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object.  
@@ -128,4 +108,46 @@ If the user selects inside shadow,
 ### General algorithm
 1. If selected node's root is ShadowRoot, host node is selected.
 1. Each '''getSelection()''' is associated with a Range including such selected node.
+
+## Appendix
+What happens if ```getRangeAt(0)``` is called on user drag?
+```html
+outer<span id=host></span>
+<script>
+host.attachShadow({mode:'open'}).innerHTML = 'inner';
+</script>
+```
+
+### #1. outer->inner  
+The user drags mouse from ```'outer'``` to ```'inner'```.  
+
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|------------               |:---------:|:------:|
+| User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
+| ```document.getSelection().getRangeAt(0)``` |  ```{‘outer’,2, ‘outer’, 5}```      |  ```{‘outer’,2, ‘outer’, 5}```  |
+| ```shadowRoot.getSelection().getRangeAt(0)``` |  (throw exception because no range)     |  N/A  |
+
+- Chrome allows the user going int Shadow DOM. It violates spec.
+- Safari prohibits the user go into Shadow DOM. It follows spec.
+- User can copy highlight text.
+- At any case, shadow author can't know its content is selected.
+
+### #2. inner->outer  
+The user drags mouse from ```'inner'``` to ```'outer'```.  
+
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|------------               |:---------:|:------:|
+| User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
+| ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
+| ```shadowRoot.getSelection()``` |  ```{‘inner’, 3, ‘inner’, 0}```     |  N/A  |
+
+### #3. Only inner  
+The user drags mouse inside ```'inner'```.  
+
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|------------               |:---------:|:------:|
+| User selection            |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
+| ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
+| ```shadowRoot.getSelection()``` |  ```{‘inner’, 1, ‘inner’, 4}```     |  N/A  |
+
 
