@@ -6,6 +6,16 @@ However, Shadow DOM inserts other node trees into a document recursively and we 
 That has made Selection API not working for Shadow DOM.([reported issue](https://github.com/w3c/webcomponents/issues/79))  
 Also there are interop issues between user agents' implementation.  
 
+## Selection API Example
+Following code illustrates a normal text and a bold text:
+```html
+foo<b>bar</b>
+```
+![image](resources/foobar.png)  
+If the user drag mouse from ```'foo'``` to ```'bar'```,  
+![image](resources/foobar-select.png)  
+In this situation, ```document.getSelection()``` returns a Selection associated with a Range of ```{'foo',1, 'bar', 1}```.  
+
 ## Support table
 |                           |   Chrome  | Safari | Firefox | Edge |
 |------------               |:---------:|:------:|:------:|:------:|
@@ -14,16 +24,7 @@ Also there are interop issues between user agents' implementation.
 | User selection for Shadow | ❗(see example) | ❗(see example)  | N/A| N/A |
 | ```shadowRoot.getSelection()``` |  ❗(see example)      |  ```undefined```  | N/A| N/A |
 
-## Examples
-Following code illustrates a normal text and a bold text:
-```html
-foo<b>bar</b>
-```
-![image](resources/foobar.png)  
-If the user drag mouse from ```'foo'``` to ```'bar'```,  
-![image](resources/foobar-select.png)  
-and ```document.getSelection()``` returns a Selection associated with a Range of ```{'foo',1, 'bar', 1}```.  
-
+## Shadow DOM Examples
 Following code illustrates very simple Shadow DOM:
 ```html
 outer<span id=host></span>
@@ -62,19 +63,36 @@ The user drags mouse inside ```'inner'```.
 | ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
 | ```shadowRoot.getSelection()``` |  ```{‘inner’, 1, ‘inner’, 4}```     |  N/A  |
 
-## 
+## Key points
+- The user can copy hilight text in any case.
+- For user interaction, Safari follows current spec which prohibits the user to select crossing shadow but permits to select inner shadow.
+- If selection starts from document, any ```document.getSeletion()``` returns the Range includes at least selected top level nodes.
+- If selection starts from Shadow DOM,  ```document.getSeletion()``` behaves like shadow tree is INPUT element.  
 
-Except javascript API, Safari implementation follows spec which prohibits the user to select crossing shadow but permits to select inner shadow.
-Though there are many other cases like outer->innter->moreinner, inner->outer->anotherinner, I want to get a consensus about this simplest case first. 
+Though there are many other cases like outer->inner->moreinner, inner->outer->anotherinner, I want to get a consensus about this simplest case first. 
+
+## Proposition
+The user can select contents crossing shadow boundary.  
+
+|                           |  Proposition |
+|------------               |:---------:|
+| User selection            |  ![image](resources/outerinner-chrome.png) |
+| ```document.getSelection()``` |  ```{‘outer’,2, document.body, 2}```      |  
+| ```shadowRoot.getSelection()``` |  ```{host.shadowRoot, 0, ‘inner’, 3}```     |  
+
+- ```document.getSelection()``` ending ```document.body, 2``` indicates selection contains the shadow host element.
+- ```shadowRoot.getSelection()``` starting ```host.shadowRoot, 0``` indicates selection starts from the beggining of the shadow root.  
+- If web author wants to control user selection, recommend using [CSS user-select property](https://www.w3.org/TR/css-ui-
+
+If the user selects inside shadow,
+
+|                           |  Proposition |
+|------------               |:---------:|
+| User selection            |  ![image](resources/inner-chrome.png) |
+| ```document.getSelection()``` |  ```{document.body, 1, document.body, 2}```      |  
+| ```shadowRoot.getSelection()``` |  ```{'inner', 1, ‘inner’, 4}```     |  
+
+- ```document.getSelection()```  indicates selection contains the shadow host element.
 
 
-Proposition
 
-For user interactions, the user can select contents crossing shadow boundary.
-If web author want to control user selection, recommend using CSS user-select property.
-As javascipt API,
-document.getSelection() = {‘outer’,2, document.body, 2};
-                (document.body, 2) means after host.
-it indicates shadowRoot is selected but still not expose shadow contents.
-host.shadowRoot.getSelection() = {host.shadowRoot, 0, ‘inner’, 3};
-selection starts from shadowroot and ends at the middle of text.
