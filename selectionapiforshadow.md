@@ -71,9 +71,9 @@ What's happen?
 | ```shadowRoot.getSelection().getRangeAt(0)``` |  ```{'edit area', 2, 'edit area', 7}```     |  N/A  |
 
 - ```shadowRoot.getSelection()``` returns expected Range on Chrome. Even ```document.execCommand('bold')``` works.
-- ```document.getSelection()``` on both browsers are same, but ```{document.body, 1, document.body, 1}``` means a caret between ```'foo'``` and  ```<x-editor></x-editor>```
+- ```document.getSelection()``` on both browsers are same, but ```{document.body, 1, document.body, 1}``` means a caret between ```'foo'``` and  ```<x-editor>```
 
-## Case 2: User select Shadow DOM
+## Case 2: User selection on Shadow DOM
 
 Following code illustrates very simple Shadow DOM:
 ```html
@@ -97,21 +97,21 @@ Let's see what happens if the user drags mouse.
 - Safari prohibits the user crossing Shadow boundary but If user select from Shadow, the web author can't get its selection Range.
 
 ## Spec and implementation history
-Selection API defines selection as it is unique on a document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object. If there is a selection, Selection must have a Range, which start and end root's must be
+Selection API defines selection as it is unique per Document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object. If there is a selection, Selection must have a Range, which start and end root's must be
 Document and each browser implemented so (Firefox has multiple Ranges but they are also rooted to Document). 
 
 However, Shadow DOM inserts other node trees into Document. Nodes participate in ShadowRoot are rooted to ShadowRoot, which is not Document.  
 
 Thus, we can't create a Range crossing Shadow Boundary and such selection.
 
-Selection API also specified that Document has a unique selection associated with it. Then Chrome doesn't follow it.  
+Selection API also specified that Document has a unique selection associated with it. Then Chrome doesn't follow it. The user agent can't create another Selection object for ShadowRoot. If it has, interactions between them are undifined. 
 
 We need update Selection API working well for Shadow DOM.
 
-## Proposition 1
-Update Selection API. Since there would be bunch of updates/discussions, I want to join spec work.
+# General proposition
+Update Selection API. Since there would be bunch of discussions/updates, I want to join spec work.
 
-## Proposition 1
+## Proposition for crossing Shadow boundary
 Let the web author controling if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
 User-select property has 5 values of ```auto```, ```text```, ```none```, ```contain```, ```all```.  
 ```user-select:contain``` encapsuls selection like INPUT element:
