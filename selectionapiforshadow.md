@@ -37,7 +37,43 @@ This makes same selection.
 So far, Chrome and Safari implement Shadow DOM.  
 Chrome implements ```shadowRoot.getSelection()```, which returns an unique Selection object per ShadowRoot.  
 Both user selection and javascript API on each browser don't work well for Shadow DOM. Let's see it.
-## Case 1: User select Shadow DOM
+
+## Case 1: Creating own editor.
+Following code illustrates a tiny text editor:
+```html
+foo
+<x-editor></x-editor>
+<script>
+customElements.define('x-editor', class extends HTMLElement {
+  constructor() {
+    super();
+    const root = this.attachShadow({mode: 'closed'});
+    root.innerHTML = `
+      <div style="border: 1px solid black; width:100px">
+        <input type="button" value="bold">
+        <div contenteditable>edit area</div>
+      </div>`;
+    root.querySelector('input').onclick = () => {
+      console.log(document.getSelection());
+      console.log(root.getSelection());
+    };
+  }
+});
+</script>
+```
+![image](resources/tiny-select.png)  
+The web author wants selected range to boldize.  
+What's happen?
+
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|------------               |:---------:|:------:|
+| ```document.getSelection().getRangeAt(0)``` |  ```{document.body, 1, document.body, 1}```      |  ```{document.body, 1, document.body, 1}```   |
+| ```shadowRoot.getSelection().getRangeAt(0)``` |  ```{'edit area', 2, 'edit area', 7}```     |  N/A  |
+
+- ```shadowRoot.getSelection()``` returns expected Range on Chrome
+- ```document.getSelection()``` on both browsers are same, but ```{document.body, 1, document.body, 1}``` means a caret between ```'foo'``` and  ```<x-editor></x-editor>```
+
+## Case 2: User select Shadow DOM
 
 Following code illustrates very simple Shadow DOM:
 ```html
