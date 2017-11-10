@@ -20,7 +20,7 @@ Following code illustrates a normal text and a bold text:
 foo<b>bar</b>
 ```
 ![image](resources/foobar.png)  
-If the user drag mouse from ```'foo'``` to ```'bar'```,
+If the user drag mouse from ```'foo'``` to ```'bar'```,  
 ![image](resources/foobar-select.png)  
 and ```document.getSelection()``` returns a Selection associated with a Range of ```{'foo',1, 'bar', 1}```.  
 
@@ -50,7 +50,8 @@ The user drags mouse from ```'inner'``` to ```'outer'```.
 |                           |   Chrome  | Safari |
 |------------               |:---------:|:------:|
 | User selection            |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
-| ```document.getSelection()``` |  ```{document.body,1, document.body, 1}```      |  ```{document.body,1, document.body, 1}```  |
+| ```document.getSelection()``` |  ```{document.body,1,```      |  ```{document.body,1,```  |
+|  |  ```  document.body, 1}```      |  ```  document.body, 1}```  |
 | ```shadowRoot.getSelection()``` |  ```{‘inner’, 3, ‘inner’, 0}```     |  N/A  |
 
 ### #3. Only inner  
