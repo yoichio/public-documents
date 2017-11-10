@@ -1,5 +1,5 @@
 # [Selection API](https://www.w3.org/TR/selection-api/) proposition for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
-In this document, I explain selection cases on Shadow DOM and propose spec modification.  
+In this document, I explain selection cases on Shadow DOM and propose rough idea.  
 **This proposition is NOT about [multiple Ranges](https://github.com/w3c/selection-api/issues/41).**
 
 ## Selection API Example w/o Shadow
@@ -58,7 +58,7 @@ If Shadow is closed, the Document author should not know selection inside Shadow
 
 ## Case 2: User selection crossing Shadow DOM
 
-Following code illustrates very simple Shadow DOM:
+Following code illustrates very simple inline Shadow DOM:
 ```html
 outer<span id=host></span>
 <script>
@@ -93,7 +93,7 @@ We need update Selection API working well for Shadow DOM.
 ### Reference List
 https://www.w3.org/TR/shadow-dom/  
 https://www.w3.org/TR/selection-api/  
-https://www.w3.org/TR/dom/#ranges
+https://www.w3.org/TR/dom/#ranges  
 https://github.com/w3c/webcomponents/issues/79  
 
 # General proposition
@@ -160,26 +160,6 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 ![image](resources/shadow.png)  
 
 Let's see what happens if the user drags mouse over Shadow boundary.
-
-|   From | To                        |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
-|--------|----               |:---------:|:------:|
-| ```'outer'``` | ```'inner'```   |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
-|  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
-| ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
-
-- User can copy highlight text at any case.
-- Chrome allows the user crossing Shadow boundary but ```document.getSelection()``` and/or ```shadowRoot.getSelection()``` don't return correct higlight Ranges(see detail).
-- Safari prohibits the user crossing Shadow boundary but If user select from Shadow, the web author can't get its selection Range.
-
-
-## User select Shadow DOM Detail
-What happens if ```getRangeAt(0)``` is called on user drag?
-```html
-outer<span id=host></span>
-<script>
-host.attachShadow({mode:'open'}).innerHTML = 'inner';
-</script>
-```
 
 ### #1. outer->inner  
 The user drags mouse from ```'outer'``` to ```'inner'```.  
