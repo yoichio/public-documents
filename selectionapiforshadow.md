@@ -74,10 +74,7 @@ host.attachShadow({mode:'open'}).innerHTML =
 ```
 
 As default, the user can select crossing Shadow boundary.
-
-### General algorithm
-1. If selected node's root is ShadowRoot, host node is selected.
-1. Each '''getSelection()''' is associated with a Range including such selected node.
+I also propose '''getRangeAt(0)''' modification that the web author can get its selection correctly. See detail.
 
 # Appendix
 ## Spec detail
