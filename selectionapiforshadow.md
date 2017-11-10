@@ -26,18 +26,6 @@ document.getSelection().addRange(range);
 ```
 This makes same selection.
 
-## Support table
-|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png) | ![img](resources/firefox.png) | ![img](resources/edge.png) |
-|------------               |:---------:|:------:|:------:|:------:|
-| ```document.getSelection()```   |    ✔️     |   ✔️   |✔️|✔️|
-| Shadow DOM                |  ✔️       | ✔️     | (in development) | (under consideration) | 
-| User selection for Shadow | ❗(see example) | ❗(see example)  | N/A| N/A |
-| ```shadowRoot.getSelection()``` |  ❗(see example)      |  ```undefined```  | N/A| N/A |
-
-So far, Chrome and Safari implement Shadow DOM.  
-Chrome implements ```shadowRoot.getSelection()```, which returns an unique Selection object per ShadowRoot.  
-Both user selection and javascript API on each browser don't work well for Shadow DOM. Let's see it.
-
 ## Case 1: Creating own editor.
 Following code illustrates a tiny text editor:
 ```html
@@ -128,6 +116,77 @@ As default, the user can select crossing Shadow boundary.
 I also propose '''getRangeAt(0)''' modification that the web author can get its selection correctly. See appendix.
 
 # Appendix
+
+## Support table
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png) | ![img](resources/firefox.png) | ![img](resources/edge.png) |
+|------------               |:---------:|:------:|:------:|:------:|
+| ```document.getSelection()```   |    ✔️     |   ✔️   |✔️|✔️|
+| Shadow DOM                |  ✔️       | ✔️     | (in development) | (under consideration) | 
+| User selection for Shadow | ❗(see example) | ❗(see example)  | N/A| N/A |
+| ```shadowRoot.getSelection()``` |  ❗(see example)      |  ```undefined```  | N/A| N/A |
+
+Chrome and Safari implement Shadow DOM.  
+Chrome implements ```shadowRoot.getSelection()```, which returns an unique Selection object per ShadowRoot.  
+Both user selection and javascript API on each browser don't work well for Shadow DOM. Let's see it.
+
+### Case 1: Creating own editor.
+Following code illustrates a tiny text editor:
+```html
+foo
+<x-editor></x-editor>
+<script>
+customElements.define('x-editor', class extends HTMLElement {
+  constructor() {
+    super();
+    const root = this.attachShadow({mode: 'closed'});
+    root.innerHTML = `
+      <div style="border: 1px solid black; width:100px">
+        <input type="button" value="bold">
+        <div contenteditable>edit area</div>
+      </div>`;
+    root.querySelector('input').onclick = () => {
+      console.log(document.getSelection());
+      console.log(root.getSelection());
+    };
+  }
+});
+</script>
+```
+![image](resources/tiny-select.png)  
+The web author wants selected range to boldize.  
+What's happen?
+
+|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|------------               |:---------:|:------:|
+| ```document.getSelection().getRangeAt(0)``` |  ```{document.body, 1, document.body, 1}```      |  ```{document.body, 1, document.body, 1}```   |
+| ```shadowRoot.getSelection().getRangeAt(0)``` |  ```{'edit area', 2, 'edit area', 7}```     |  N/A  |
+
+- ```shadowRoot.getSelection()``` returns expected Range on Chrome. Even ```document.execCommand('bold')``` works.
+- ```document.getSelection()``` on both browsers are same, but ```{document.body, 1, document.body, 1}``` means a caret between ```'foo'``` and  ```<x-editor>```
+
+### Case 2: User selection crossing Shadow DOM
+
+Following code illustrates very simple Shadow DOM:
+```html
+outer<span id=host></span>
+<script>
+host.attachShadow({mode:'open'}).innerHTML = 'inner';
+</script>
+```
+![image](resources/shadow.png)  
+
+Let's see what happens if the user drags mouse over Shadow boundary.
+
+|   From | To                        |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
+|--------|----               |:---------:|:------:|
+| ```'outer'``` | ```'inner'```   |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
+|  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
+| ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
+
+- User can copy highlight text at any case.
+- Chrome allows the user crossing Shadow boundary but ```document.getSelection()``` and/or ```shadowRoot.getSelection()``` don't return correct higlight Ranges(see detail).
+- Safari prohibits the user crossing Shadow boundary but If user select from Shadow, the web author can't get its selection Range.
+
 
 ## User select Shadow DOM Detail
 What happens if ```getRangeAt(0)``` is called on user drag?
