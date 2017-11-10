@@ -56,12 +56,12 @@ Let's see what happens if the user drags mouse.
 |  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
 | ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
 
-- Chrome allows the user crossing Shadow boundary. It violates Selection API spec.
-- Safari prohibits the user crossing Shadow boundary. It follows Selection API spec.
 - User can copy highlight text at any case.
+- Chrome allows the user crossing Shadow boundary but ```document.getSelection()``` and/or ```shadowRoot.getSelection()``` don't return correct higlight Ranges(see detail).
+- Safari prohibits the user crossing Shadow boundary but If user select from Shadow, the web author can't get its selection Range.
 
 ## Proposition 1
-Let the web author controling if user can cross Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
+Let the web author controling if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
 User-select property has 5 values of ```auto```, ```text```, ```none```, ```contain```, ```all```.  
 ```user-select:contain``` encapsuls selection like INPUT element:
 ```html
@@ -73,15 +73,7 @@ host.attachShadow({mode:'open'}).innerHTML =
 </script>
 ```
 
-If the user selects inside shadow,
-
-|                           |  Proposition |
-|------------               |:---------:|
-| User selection            |  ![image](resources/inner-chrome.png) |
-| ```document.getSelection()``` |  ```{document.body, 1, document.body, 2}```      |  
-| ```shadowRoot.getSelection()``` |  ```{'inner', 1, ‘inner’, 4}```     |  
-
-- ```document.getSelection()```  indicates selection contains the shadow host element.
+As default, the user can select crossing Shadow boundary.
 
 ### General algorithm
 1. If selected node's root is ShadowRoot, host node is selected.
