@@ -96,6 +96,21 @@ Let's see what happens if the user drags mouse.
 - Chrome allows the user crossing Shadow boundary but ```document.getSelection()``` and/or ```shadowRoot.getSelection()``` don't return correct higlight Ranges(see detail).
 - Safari prohibits the user crossing Shadow boundary but If user select from Shadow, the web author can't get its selection Range.
 
+## Spec and implementation history
+Selection API defines selection as it is unique on a document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object. If there is a selection, Selection must have a Range, which start and end root's must be
+Document and each browser implemented so (Firefox has multiple Ranges but they are also rooted to Document). 
+
+However, Shadow DOM inserts other node trees into Document. Nodes participate in ShadowRoot are rooted to ShadowRoot, which is not Document.  
+
+Thus, we can't create a Range crossing Shadow Boundary and such selection.
+
+Selection API also specified that Document has a unique selection associated with it. Then Chrome doesn't follow it.  
+
+We need update Selection API working well for Shadow DOM.
+
+## Proposition 1
+Update Selection API. Since there would be bunch of updates/discussions, I want to join spec work.
+
 ## Proposition 1
 Let the web author controling if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
 User-select property has 5 values of ```auto```, ```text```, ```none```, ```contain```, ```all```.  
@@ -110,14 +125,9 @@ host.attachShadow({mode:'open'}).innerHTML =
 ```
 
 As default, the user can select crossing Shadow boundary.
-I also propose '''getRangeAt(0)''' modification that the web author can get its selection correctly. See detail.
+I also propose '''getRangeAt(0)''' modification that the web author can get its selection correctly. See appendix.
 
 # Appendix
-## Spec detail
-Selection API defines selection as it is unique on a document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object.  
-However, Shadow DOM inserts other node trees into a document recursively and we don't expose contents in the trees through javascript API. Shadow DOM also has another Selection object. ```shadowRoot.getSelection()``` returns an unique Selection object per ShadowRoot.
-That specification makes Selection API not working for Shadow DOM.([reported issue](https://github.com/w3c/webcomponents/issues/79))  
-Also there are interop issues between user agents' implementation.  
 
 ## User select Shadow DOM Detail
 What happens if ```getRangeAt(0)``` is called on user drag?
