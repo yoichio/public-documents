@@ -52,8 +52,9 @@ customElements.define('x-editor', class extends HTMLElement {
 ![image](resources/tiny-select.png)  
 The web author wants selected range to boldize.  
 
-In this case, the Shadow author should be get selected Range inside Shadow but the Document author should
-not know.
+### Proposition
+In this case, the Shadow author should be get selected Range inside Shadow.
+If Shadow is closed, the Document author should not know selection inside Shadow.
 
 ## Case 2: User selection crossing Shadow DOM
 
@@ -66,6 +67,7 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 ```
 ![image](resources/shadow.png)  
 
+### Proposition
 We should permit user to select contents over Shadow boundary.
 
 |   From | To                        | Expected  |
@@ -74,7 +76,7 @@ We should permit user to select contents over Shadow boundary.
 |  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | 
 | ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | 
 
-The Shadow author can control if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
+The Shadow author can control how user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
 
 ## Spec and implementation history
 Selection API defines selection as it is unique per Document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object. If there is a selection, Selection must have a Range, which start and end root's must be
@@ -84,28 +86,12 @@ However, Shadow DOM inserts other node trees into Document. Nodes participate in
 
 Thus, we can't create a Range crossing Shadow Boundary and such selection.
 
-Selection API also specified that Document has a unique selection associated with it. Then Chrome doesn't follow it. The user agent can't create another Selection object for ShadowRoot. If it has, interactions between them are undifined. 
+Selection API also specified that Document has a unique selection associated with it. The user agent can't create another Selection object for ShadowRoot. If it has, interactions between them are undifined. 
 
 We need update Selection API working well for Shadow DOM.
 
 # General proposition
-Update Selection API. Since there would be bunch of discussions/updates, I want to join spec work.
-
-## Proposition for crossing Shadow boundary
-Let the web author controling if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
-User-select property has 5 values of ```auto```, ```text```, ```none```, ```contain```, ```all```.  
-```user-select:contain``` encapsuls selection like INPUT element:
-```html
-outer<span id=host></span>
-<script>
-host.attachShadow({mode:'open'}).innerHTML =
-  '<style>:host { user-select: contain; }</style>' 
-  + 'inner';
-</script>
-```
-
-As default, the user can select crossing Shadow boundary.
-I also propose '''getRangeAt(0)''' modification that the web author can get its selection correctly. See appendix.
+Update Selection API fiting Shadow DOM. Since there would be bunch of discussions/updates, I want to join spec work.
 
 # Appendix
 
@@ -221,7 +207,22 @@ The user drags mouse inside ```'inner'```.
 | ```document.getSelection()``` |  ```{document.body, 1,```<br>```  document.body, 1}```      |  ```{document.body, 1,```<br>```  document.body, 1}```  |
 | ```shadowRoot.getSelection()``` |  ```{‘inner’, 1, ‘inner’, 4}```     |  N/A  |
 
-## Proposition1 Detail
+## Proposition for crossing Shadow boundary
+Let the web author controling if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
+User-select property has 5 values of ```auto```, ```text```, ```none```, ```contain```, ```all```.  
+```user-select:contain``` encapsuls selection like INPUT element:
+```html
+outer<span id=host></span>
+<script>
+host.attachShadow({mode:'open'}).innerHTML =
+  '<style>:host { user-select: contain; }</style>' 
+  + 'inner';
+</script>
+```
+
+As default, the user can select crossing Shadow boundary.
+I also propose '''getRangeAt(0)''' modification that the web author can get its selection correctly.
+## ```getRangeAt(0)``` Detail
 Let's look at example again:
 ```html
 outer<span id=host></span>
@@ -229,7 +230,6 @@ outer<span id=host></span>
 host.attachShadow({mode:'open'}).innerHTML = 'inner';
 </script>
 ```
-**The user can select contents crossing shadow boundary.**  
 
 |                           |  Proposition |
 |------------               |:---------:|
