@@ -50,7 +50,7 @@ customElements.define('x-editor', class extends HTMLElement {
 </script>
 ```
 ![image](resources/tiny-select.png)  
-The web author wants selected range to boldize.  
+The Shadow web author wants selected range to boldize.  
 
 ### Proposition
 In this case, the Shadow author should be get selected Range inside Shadow.
@@ -89,6 +89,12 @@ Thus, we can't create a Range crossing Shadow Boundary and such selection.
 Selection API also specified that Document has a unique selection associated with it. The user agent can't create another Selection object for ShadowRoot. If it has, interactions between them are undifined. 
 
 We need update Selection API working well for Shadow DOM.
+
+### Reference List
+https://www.w3.org/TR/shadow-dom/  
+https://www.w3.org/TR/selection-api/  
+https://www.w3.org/TR/dom/#ranges
+https://github.com/w3c/webcomponents/issues/79  
 
 # General proposition
 Update Selection API fiting Shadow DOM. Since there would be bunch of discussions/updates, I want to join spec work.
