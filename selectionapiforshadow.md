@@ -11,28 +11,38 @@ Also there are interop issues between user agents' implementation.
 |------------               |:---------:|:------:|:------:|:------:|
 | document.getSelection()   |    ✔️     |   ✔️   |✔️|✔️|
 | Shadow DOM                |  ✔️       | ✔️     | (in development) | (under consideration) | 
-| shadowRoot.getSelection() |  ✔️       |  undefined  | N/A| N/A |
+| User selection for Shadow | ❗(see example) | ❗(see example)  | N/A| N/A |
+| shadowRoot.getSelection() |  ❗(see example)      |  undefined  | N/A| N/A |
 
 ## Examples
-Following code demonstrate very simple Shadow DOM:
+Following code illustrates very simple Shadow DOM:
 ```html
 outer<span id=host></span>
 <script>
 host.attachShadow({mode:'open'}).innerHTML = 'inner';
 </script>
 ```
+![image](resources/shadow.png)  
 
+Let's see what happens if the user drag mouse in various ways.
 
-#1. outer->inner
-Chrome
+### #1. outer->inner  
+The user drags mouse from ```'outer'``` to ```'inner'```.  
+|                           |   Chrome  | Safari |
+|------------               |:---------:|:------:|
+| User selection   |    a       |   ✔️   |
+| shadowRoot.getSelection() |  ❗(see example)      |  undefined  | 
 
+#### Chrome
+![image](resources/outerinner-chrome.png)   
+```javascript
 document.getSelection() = {‘outer’,2, ‘outer’, 5};
 host.shadowRoot.getSelection() = {null, 0, null, 0};
 Safari
 
 document.getSelection() = {‘outer’,2, ‘outer’, 5};
 
-#2. inner->outer
+### #2. inner->outer  
 Chrome
 
 document.getSelection() = {document.body, 1, document.body, 1};
@@ -40,7 +50,8 @@ host.shadowRoot.getSelection() = {‘inner’, 3, ‘inner’, 0};
 Safari
 
 document.getSelection() = {document.body, 1, document.body, 1};
-#3. inner
+
+### #3. Only inner  
 Chrome
 
 document.getSelection() = {document.body, 1, document.body, 1};
