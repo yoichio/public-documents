@@ -67,7 +67,7 @@ The user drags mouse inside ```'inner'```.
 ## Key points
 - The user can copy hilight text in any case.
 - For user interaction, Safari follows current spec which prohibits the user to select crossing shadow but permits to select inner shadow.
-- If selection starts from document, any ```document.getSeletion()``` returns the Range includes at least selected top level nodes.
+- If selection starts from document, any ```document.getSeletion()``` returns a Range includes at least selected top level nodes.
 - If selection starts from Shadow DOM,  ```document.getSeletion()``` behaves like shadow tree is INPUT element.  
 
 Though there are many other cases like outer->inner->moreinner, inner->outer->anotherinner, I want to propose fixing this simplest case first. 
@@ -80,7 +80,7 @@ outer<span id=host></span>
 host.attachShadow({mode:'open'}).innerHTML = 'inner';
 </script>
 ```
-The user can select contents crossing shadow boundary.  
+**The user can select contents crossing shadow boundary.**  
 
 |                           |  Proposition |
 |------------               |:---------:|
