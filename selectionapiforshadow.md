@@ -73,7 +73,7 @@ What's happen?
 - ```shadowRoot.getSelection()``` returns expected Range on Chrome. Even ```document.execCommand('bold')``` works.
 - ```document.getSelection()``` on both browsers are same, but ```{document.body, 1, document.body, 1}``` means a caret between ```'foo'``` and  ```<x-editor>```
 
-## Case 2: User selection on Shadow DOM
+## Case 2: User selection crossing Shadow DOM
 
 Following code illustrates very simple Shadow DOM:
 ```html
@@ -84,7 +84,7 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 ```
 ![image](resources/shadow.png)  
 
-Let's see what happens if the user drags mouse.
+Let's see what happens if the user drags mouse over Shadow boundary.
 
 |   From | To                        |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
 |--------|----               |:---------:|:------:|
