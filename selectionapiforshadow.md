@@ -1,6 +1,6 @@
 # [Selection API](https://www.w3.org/TR/selection-api/) prospotion for [Shadow DOM](https://www.w3.org/TR/shadow-dom/)
 In this document, I explain selection issues on Shadow DOM and propose spec modification.  
-**This proposition is NOT about multiple Ranges.**
+**This proposition is NOT about [multiple Ranges](https://github.com/w3c/selection-api/issues/41).**
 
 ## Selection API Example w/o Shadow
 Following code illustrates a normal text and a bold text:
@@ -51,15 +51,9 @@ customElements.define('x-editor', class extends HTMLElement {
 ```
 ![image](resources/tiny-select.png)  
 The web author wants selected range to boldize.  
-What's happen?
 
-|                           |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
-|------------               |:---------:|:------:|
-| ```document.getSelection().getRangeAt(0)``` |  ```{document.body, 1, document.body, 1}```      |  ```{document.body, 1, document.body, 1}```   |
-| ```shadowRoot.getSelection().getRangeAt(0)``` |  ```{'edit area', 2, 'edit area', 7}```     |  N/A  |
-
-- ```shadowRoot.getSelection()``` returns expected Range on Chrome. Even ```document.execCommand('bold')``` works.
-- ```document.getSelection()``` on both browsers are same, but ```{document.body, 1, document.body, 1}``` means a caret between ```'foo'``` and  ```<x-editor>```
+In this case, the Shadow author should be get selected Range inside Shadow but the Document author should
+not know.
 
 ## Case 2: User selection crossing Shadow DOM
 
@@ -72,17 +66,15 @@ host.attachShadow({mode:'open'}).innerHTML = 'inner';
 ```
 ![image](resources/shadow.png)  
 
-Let's see what happens if the user drags mouse over Shadow boundary.
+We should permit user to select contents over Shadow boundary.
 
-|   From | To                        |   ![img](resources/chrome.png)  | ![img](resources/safari.png)  |
-|--------|----               |:---------:|:------:|
-| ```'outer'``` | ```'inner'```   |  ![image](resources/outerinner-chrome.png) | ![image](resources/outerinner-safari.png)   |
-|  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | ![image](resources/innerouter-safari.png)   |
-| ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | ![image](resources/inner-safari.png)   |
+|   From | To                        | Expected  |
+|--------|----               |:---------:|
+| ```'outer'``` | ```'inner'```   |  ![image](resources/outerinner-chrome.png) | 
+|  ```'inner'``` | ```'outer'```        |  ![image](resources/outerinner-chrome.png) | 
+| ```'inner'``` | ```'inner'```             |  ![image](resources/inner-chrome.png) | 
 
-- User can copy highlight text at any case.
-- Chrome allows the user crossing Shadow boundary but ```document.getSelection()``` and/or ```shadowRoot.getSelection()``` don't return correct higlight Ranges(see detail).
-- Safari prohibits the user crossing Shadow boundary but If user select from Shadow, the web author can't get its selection Range.
+The Shadow author can control if user can select crossing Shadow boundary with [CSS user-select property](https://www.w3.org/TR/css-ui-4/#propdef-user-select).  
 
 ## Spec and implementation history
 Selection API defines selection as it is unique per Document which consists of one node tree. ```document.getSelection()``` returns a singleton Selection object. If there is a selection, Selection must have a Range, which start and end root's must be
